@@ -447,7 +447,7 @@ export function createSpeaker(): Speaker {
         nativeBroken = true
         diag.nativeBroken = true
         diag.engine = 'elevenlabs'
-        console.warn('[jarvis] system voice is not producing sound — using the bridge speech proxy from here on')
+        console.warn('[carter] system voice is not producing sound — using the bridge speech proxy from here on')
       }
       const rescue = await fetchCloudAudio(item.text).catch(() => null)
       if (rescue && !cancelled) {
@@ -546,7 +546,7 @@ export function createSpeaker(): Speaker {
         // barge-in. Everything else means the engine could not speak.
         if (code !== 'interrupted' && code !== 'canceled') {
           diag.failures++
-          console.error(`[jarvis] speech failed (${code}) on voice "${u.voice?.name ?? 'default'}"`)
+          console.error(`[carter] speech failed (${code}) on voice "${u.voice?.name ?? 'default'}"`)
         }
         finish()
       }
@@ -557,7 +557,7 @@ export function createSpeaker(): Speaker {
       // silent sentence is recoverable and a stuck queue is not.
       watchdog = setTimeout(() => {
         if (done || started) return
-        console.warn('[jarvis] speech did not start — un-wedging the engine')
+        console.warn('[carter] speech did not start — un-wedging the engine')
         speechSynthesis.cancel()
         speechSynthesis.resume()
         try {
@@ -568,7 +568,7 @@ export function createSpeaker(): Speaker {
         }
         watchdog = setTimeout(() => {
           if (done || started) return
-          console.error('[jarvis] speech engine is not responding — switching to the cloud voice')
+          console.error('[carter] speech engine is not responding — switching to the cloud voice')
           diag.failures++
           diag.lastError = diag.lastError || 'no-start'
           finish()

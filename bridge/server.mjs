@@ -41,7 +41,7 @@ const PORT = Number(process.env.JARVIS_BRIDGE_PORT ?? 8788)
  * its own error to the browser.
  */
 process.on('unhandledRejection', (err) => {
-  console.error('[jarvis] unhandled rejection:', err)
+  console.error('[carter] unhandled rejection:', err)
 })
 
 /**
@@ -467,7 +467,7 @@ async function proxyRemote(req, res, cors, { kinds, maxBytes, timeoutMs, ranged 
     if (sent > maxBytes) {
       // Headers went out long ago, so a truncated body is the only way left to
       // say no. The player sees a short read; we see this line in the log.
-      console.warn(`[jarvis] proxy cut ${target.href} at ${maxBytes} bytes`)
+      console.warn(`[carter] proxy cut ${target.href} at ${maxBytes} bytes`)
       upstream.destroy()
       res.destroy()
       return
@@ -514,7 +514,7 @@ const http = await import('node:http')
 const handleRequest = async (req, res) => {
   const origin = req.headers.origin
   if (origin && !originAllowed(origin)) {
-    console.warn(`[jarvis] refused http request from origin ${origin}`)
+    console.warn(`[carter] refused http request from origin ${origin}`)
     res.writeHead(403, { vary: 'origin' })
     return res.end('forbidden')
   }
@@ -819,7 +819,7 @@ const server = http.createServer((req, res) => {
   // unhandled rejection and leave the browser waiting on a socket that is
   // never going to answer.
   handleRequest(req, res).catch((err) => {
-    console.error('[jarvis] request failed:', err)
+    console.error('[carter] request failed:', err)
     if (!res.headersSent) res.writeHead(500)
     res.end()
   })
@@ -834,12 +834,12 @@ const wss = new WebSocketServer({
   verifyClient: ({ origin, req }, done) => {
     const path = (req.url ?? '/').split('?')[0]
     if (path !== '/' && path !== '/ws') {
-      console.warn(`[jarvis] rejected websocket on path ${path}`)
+      console.warn(`[carter] rejected websocket on path ${path}`)
       return done(false, 403, 'Forbidden')
     }
     if (!originAllowed(origin)) {
       console.warn(
-        `[jarvis] rejected websocket from origin ${origin ?? '(none)'}` +
+        `[carter] rejected websocket from origin ${origin ?? '(none)'}` +
           ' — set JARVIS_ALLOWED_ORIGINS to permit it',
       )
       return done(false, 403, 'Forbidden')
@@ -863,14 +863,14 @@ server.on('error', onListenError)
 wss.on('error', onListenError)
 server.listen(PORT)
 
-console.log(`[jarvis] bridge listening on ws://localhost:${PORT}`)
+console.log(`[carter] bridge listening on ws://localhost:${PORT}`)
 console.log(
-  `[jarvis] speech ${elevenKey() ? 'via ElevenLabs (key from MCP config)' : 'using browser fallback voice'}`,
+  `[carter] speech ${elevenKey() ? 'via ElevenLabs (key from MCP config)' : 'using browser fallback voice'}`,
 )
-console.log(`[jarvis] model ${MODEL} · effort ${EFFORT}`)
+console.log(`[carter] model ${MODEL} · effort ${EFFORT}`)
 console.log(
-  `[jarvis] writes ${ALLOW_WRITES ? 'ENABLED' : 'disabled'}` +
-    (ALLOW_WRITES ? '' : ' — set JARVIS_ALLOW_WRITES=1 to permit shell/file/device actions'),
+  `[carter] writes ${ALLOW_WRITES ? 'ENABLED' : 'disabled'}` +
+    (ALLOW_WRITES ? '' : ' — use "Start Carter (full control)" to let Carter take actions'),
 )
 // Asynchronous, so it lands a beat after the rest of the banner. Worth printing
 // at all because an extension that is simply not running is indistinguishable
@@ -879,13 +879,13 @@ console.log(
 void chromeAvailable().then((ok) => {
   console.log(
     ok
-      ? `[jarvis] browser control ready${ALLOW_WRITES ? '' : ' (reading only — clicking and typing need JARVIS_ALLOW_WRITES=1)'}`
-      : '[jarvis] browser control unavailable — open Chrome with the Claude extension enabled',
+      ? `[carter] browser control ready${ALLOW_WRITES ? '' : ' (reading only — full control mode lets Carter click and type)'}`
+      : '[carter] browser control unavailable — open Chrome with the Claude extension enabled',
   )
 })
 
 console.log(
-  '[jarvis] accepting local dev origins' +
+  '[carter] accepting local dev origins' +
     (EXTRA_ORIGINS.size ? ` plus ${[...EXTRA_ORIGINS].join(', ')}` : '') +
     (ALLOW_NO_ORIGIN ? ' and clients that send no origin' : ''),
 )
@@ -903,7 +903,7 @@ const RESULT_FAILURES = {
 }
 
 wss.on('connection', (socket) => {
-  console.log('[jarvis] client connected')
+  console.log('[carter] client connected')
 
   // Answer the HUD straight away rather than making it wait for the agent's
   // first turn. Refined later by the real init message.
@@ -1037,11 +1037,11 @@ wss.on('connection', (socket) => {
     // The display tool isn't work being done, it's the HUD drawing itself —
     // announcing it would put "jarvis · display" in the tool badge and trigger
     // a "working on it" filler for something already on screen.
-    if (name === 'mcp__jarvis__display') return
+    if (name === 'mcp__carter_hud__display') return
     // The ui_* tools are the same case one step further: retinting the
     // interface is the interface talking about itself, not work being done for
     // the user, and the badge would be describing the very thing they can see.
-    if (name.startsWith('mcp__jarvis_ui__')) return
+    if (name.startsWith('mcp__carter_ui__')) return
     if (decideTool(name)) return sendTurn({ type: 'tool', name })
     if (id) heldTools.set(id, name)
   }
@@ -1062,21 +1062,21 @@ wss.on('connection', (socket) => {
       // connection rather than once.
       mcpServers: {
         ...MCP_SERVERS,
-        jarvis: displayServer(
+        carter_hud: displayServer(
           (panel) => send({ type: 'panel', panel }),
           (blade) => send({ type: 'blade', blade }),
         ),
         // The interface controls, on the same socket. A separate key because
         // MCP tool names are `mcp__<key>__<tool>` and one key can only carry
         // one server; the underscore in it is why decideTool and announceTool
-        // both name `jarvis_ui` explicitly.
-        jarvis_ui: uiServer((op, args) => send({ type: 'ui', op, args })),
+        // both name `carter_ui` explicitly.
+        carter_ui: uiServer((op, args) => send({ type: 'ui', op, args })),
         // The user's own Chrome, over the extension's native-host socket. It
         // holds no per-connection state, but it is built here with the rest so
         // the write gate is read once, at the same point as everything else.
-        jarvis_chrome: chromeServer({ allowWrites: ALLOW_WRITES }),
+        carter_chrome: chromeServer({ allowWrites: ALLOW_WRITES }),
         // The camera, which unlike everything else here has to ask and wait.
-        jarvis_eyes: visionServer(ask),
+        carter_eyes: visionServer(ask),
         // Carter's long-term memory, a JSON file on this machine.
         carter_memory: memoryServer(),
       },
@@ -1128,7 +1128,7 @@ wss.on('connection', (socket) => {
       // reliable; an absence of a call here is not proof nothing ran.
       canUseTool: async (toolName) => {
         const ok = decideTool(toolName)
-        console.log(`[jarvis] tool ${toolName} -> ${ok ? 'allow' : 'deny'}`)
+        console.log(`[carter] tool ${toolName} -> ${ok ? 'allow' : 'deny'}`)
         return ok
           ? { behavior: 'allow' }
           : {
@@ -1215,7 +1215,7 @@ wss.on('connection', (socket) => {
               })
             } else {
               console.error(
-                `[jarvis] turn failed: ${msg.subtype}`,
+                `[carter] turn failed: ${msg.subtype}`,
                 msg.errors ?? '',
               )
               sendTurn({
@@ -1241,13 +1241,13 @@ wss.on('connection', (socket) => {
                 .filter((s) => s.status !== 'needs-auth' && s.status !== 'failed')
                 .map((s) => s.name)
               send({ type: 'ready', servers: usable })
-              console.log(`[jarvis] ${usable.length} MCP servers available`)
+              console.log(`[carter] ${usable.length} MCP servers available`)
             }
             break
         }
       }
     } catch (err) {
-      console.error('[jarvis] session error:', err)
+      console.error('[carter] session error:', err)
       send({ type: 'error', message: String(err?.message ?? err) })
       // The stream is finished either way — nothing will ever be read from it
       // again. Leaving the socket open would leave the client believing it has
@@ -1320,7 +1320,7 @@ wss.on('connection', (socket) => {
   })
 
   socket.on('close', () => {
-    console.log('[jarvis] client disconnected')
+    console.log('[carter] client disconnected')
     closed = true
     deliver?.(null)
     session.close?.()

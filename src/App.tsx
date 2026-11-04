@@ -334,7 +334,7 @@ export default function App() {
       // for the rest of the page, recoverable only by reloading. Reset it and
       // put the button back so the user can simply press it again.
       booting.current = false
-      console.error('[jarvis] power-up failed:', err)
+      console.error('[carter] power-up failed:', err)
       store.getState().setPhase('offline')
       store
         .getState()
@@ -446,7 +446,7 @@ export default function App() {
           s.clearScreen(a.what ?? 'all')
           break
         default:
-          console.warn('[jarvis] unknown ui op:', op, args)
+          console.warn('[carter] unknown ui op:', op, args)
       }
     })
     // In bridge mode the conversation lives in the agent session, which is tied
@@ -504,7 +504,7 @@ export default function App() {
       await startAnalyser()
     } catch {
       console.warn(
-        '[jarvis] no microphone stream — the reactor will not pulse with your ' +
+        '[carter] no microphone stream — the reactor will not pulse with your ' +
           'voice. Speech recognition is unaffected.',
       )
     }
@@ -669,7 +669,7 @@ export default function App() {
         t.say('Audio test. If you can hear this, speech output is working, founder.')
         void t.end().then(() => {
           const d = (window as unknown as Record<string, Record<string, unknown>>).__tts
-          console.info('[jarvis] audio test →', d)
+          console.info('[carter] audio test →', d)
           if (d && d.started === 0 && d.rescued === 0) {
             store.getState().setError(
               `No sound produced. engine=${d.engine} voice=${d.voice} error=${d.lastError || 'none'}`,

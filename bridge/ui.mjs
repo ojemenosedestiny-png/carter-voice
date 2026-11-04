@@ -336,7 +336,7 @@ const GOLDEN_ANGLE = 137.507764
  */
 export function uiServer(emit) {
   return createSdkMcpServer({
-    name: 'jarvis_ui',
+    name: 'carter_ui',
     version: '1.0.0',
     instructions:
       'Carter\'s control of its own interface — colour, reactor, orbiting ' +

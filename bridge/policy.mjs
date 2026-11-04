@@ -184,7 +184,7 @@ export function decideTool(name) {
     // without them JARVIS has no display at all. They also have to be named
     // here rather than left to the verb rules below, which read `ui_theme` as
     // a write and would hold the whole surface back behind ALLOW_WRITES.
-    if (server === 'jarvis' || server === 'jarvis_ui') return true
+    if (server === 'carter_hud' || server === 'carter_ui') return true
 
     // Carter's own memory lives in a file on this machine and changes nothing
     // outside it, so remembering and forgetting are always allowed.
@@ -197,12 +197,12 @@ export function decideTool(name) {
     // reading verbs out of the name would only get it wrong: `chrome_navigate`
     // begins with no read verb and would fall to the write branch, which would
     // withhold the one tool the whole server is for.
-    if (server === 'jarvis_chrome') return true
+    if (server === 'carter_chrome') return true
 
     // The camera. Not withheld behind ALLOW_WRITES: looking changes nothing,
     // and the real gate is the browser's own camera permission plus an
     // indicator the user can see for as long as it is live.
-    if (server === 'jarvis_eyes') return true
+    if (server === 'carter_eyes') return true
 
     const tool = mcpToolOf(name)
     if (EFFECTFUL_VERB.test(tool) && !VETO_EXEMPT.has(`${server}__${tool}`)) {

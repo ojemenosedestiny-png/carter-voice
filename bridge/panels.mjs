@@ -319,7 +319,7 @@ argument. You know those things. Overrule it whenever you have reason to.`
  */
 export function displayServer(emit, emitBlade) {
   return createSdkMcpServer({
-    name: 'jarvis',
+    name: 'carter_hud',
     version: '1.0.0',
     instructions:
       'Carter\'s heads-up display. Use `display` to put content on screen ' +
@@ -340,7 +340,7 @@ export function displayServer(emit, emitBlade) {
         // the child element rather than the parent.
         const text = String(args.html ?? '').replace(/<[^>]*>/g, '').trim()
         if (!text && !/<(img|video|iframe|source)\b/i.test(args.html ?? '')) {
-          console.warn('[jarvis] display called with an empty body:', args.title)
+          console.warn('[carter] display called with an empty body:', args.title)
           return {
             isError: true,
             content: [
