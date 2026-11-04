@@ -398,12 +398,34 @@ export async function startVoice(h: VoiceHandlers): Promise<Voice> {
     )
     return { stop: () => {}, live: () => false }
   }
-  diag.engine = caps().stt ? 'elevenlabs' : 'browser'
-  return caps().stt ? startElevenVoice(h) : startBrowserVoice(h)
+  if (!caps().stt) {
+    diag.engine = 'browser'
+    return startBrowserVoice(h)
+  }
+
+  // ElevenLabs first. If it refuses outright — a key without speech-to-text
+  // permission, no credit, a plan that does not include it — switch to the
+  // browser's own recogniser instead of going deaf.
+  diag.engine = 'elevenlabs'
+  let current: Voice
+  let switched = false
+  const fallBack = () => {
+    if (switched) return
+    switched = true
+    console.warn('[carter] ElevenLabs speech-to-text refused — listening with Chrome instead.')
+    current.stop()
+    diag.engine = 'browser'
+    current = startBrowserVoice(h)
+  }
+  current = await startElevenVoice(h, fallBack)
+  return {
+    stop: () => current.stop(),
+    live: () => current.live(),
+  }
 }
 
 /** VAD + ElevenLabs Scribe. */
-async function startElevenVoice(h: VoiceHandlers): Promise<Voice> {
+async function startElevenVoice(h: VoiceHandlers, refused: () => void): Promise<Voice> {
   let lastWake = 0
   let vad: Vad | null = null
 
@@ -460,6 +482,8 @@ async function startElevenVoice(h: VoiceHandlers): Promise<Voice> {
         diag.restarts++
         diag.lastError = `stt ${res.status}`
         drop(`transcription failed (${res.status})`)
+        // 401/402/403 will never succeed — stop asking and use Chrome instead.
+        if (res.status === 401 || res.status === 402 || res.status === 403) refused()
         return
       }
       const { text } = (await res.json()) as { text?: string }

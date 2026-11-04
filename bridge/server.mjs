@@ -814,7 +814,7 @@ const handleRequest = async (req, res) => {
         // Say it loudly: when this fails the interface quietly falls back to
         // the computer's own voice, which sounds nothing like Carter's.
         console.warn(
-          `[carter] ElevenLabs voice failed (${upstream.status}) — using the computer's voice instead: ${why.slice(0, 200)}`,
+          `[carter] ElevenLabs hearing (speech-to-text) failed (${upstream.status}) — listening with Chrome instead: ${why.slice(0, 200)}`,
         )
         res.writeHead(upstream.status, cors)
         return res.end(why)
