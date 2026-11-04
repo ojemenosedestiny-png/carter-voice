@@ -2,7 +2,7 @@
  * Score.
  *
  * Three cues, all local files under public/audio/:
- *   boot-music — Carter's start-up swell (music only, no voice), once
+ *   boot-music — Carter's start-up swell with Carter's spoken introduction, once
  *   ambient    — the opening music, once, alongside it
  *   work       — an industrial cue that loops while a tool is running
  *
@@ -83,7 +83,7 @@ function track(cue: Cue): Track | null {
   if (!enabled || missing.has(cue)) return null
   let t = tracks.get(cue)
   if (!t) {
-    const el = new Audio(`/audio/${cue}.mp3?v=carter2`)
+    const el = new Audio(`/audio/${cue}.mp3?v=carter3`)
     el.preload = 'auto'
     // Only the work cue repeats. It has to, because it covers an operation of
     // unknown length; the two power-up cues are events with an end.

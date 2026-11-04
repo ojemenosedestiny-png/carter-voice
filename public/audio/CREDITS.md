@@ -1,7 +1,8 @@
 # Audio credits
 
 `boot-music.mp3` is Carter's own start-up swell, synthesised for this
-project (no voice, no third-party music).
+project, with Carter's spoken introduction recorded by the founder in
+ElevenLabs.
 
 The other two tracks are by **Kevin MacLeod** (incompetech.com), licensed
 **Creative Commons Attribution 4.0**. Free to use commercially — including in a

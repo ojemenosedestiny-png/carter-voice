@@ -551,17 +551,12 @@ export default function App() {
       } catch {
         /* ignore */
       }
-      void respond(
-        'Good morning, Carter. Introduce yourself in one sentence as Carter, ' +
-          'then give me my daily briefing.',
-      )
-    } else {
-      // Every other start-up: Carter introduces itself, in Carter's voice.
-      // (This used to be baked into the start-up music as JARVIS's line.)
-      const hello = createSpeaker()
-      speaker.current = hello
-      hello.say('Allow me to introduce myself. I am Carter, your personal assistant.')
-      void hello.end()
+      // After the start-up sound has finished — it carries Carter's own
+      // spoken introduction ("Allow me to introduce myself. I am Carter…"),
+      // which runs about five seconds past the end of the boot sequence.
+      setTimeout(() => {
+        void respond('Good morning, Carter. Give me my daily briefing.')
+      }, 5500)
     }
   }
 
