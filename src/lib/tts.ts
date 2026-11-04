@@ -307,9 +307,15 @@ function outputContext(): AudioContext | null {
  * vocative "sir" is always set off by a comma buys the small beat before it
  * that does most of the characterisation.
  */
+/** Carter's name, guaranteed: the old JARVIS name is never spoken or shown. */
+export const asCarter = (text: string) =>
+  text.replace(/\bJ\.\s?A\.\s?R\.\s?V\.\s?I\.\s?S\.?|\bJarvis\b/gi, (m) =>
+    m === m.toUpperCase() ? 'CARTER' : 'Carter',
+  )
+
 function shape(text: string): string {
   return (
-    text
+    asCarter(text)
       // Models leak markdown even when told not to, and a synthesiser will
       // happily read "https colon slash slash" out loud. Strip the syntax and
       // keep the words.
@@ -474,7 +480,7 @@ export function createSpeaker(): Speaker {
       // paused, so it is safe to fire before every utterance.
       speechSynthesis.resume()
 
-      const u = new SpeechSynthesisUtterance(text)
+      const u = new SpeechSynthesisUtterance(asCarter(text))
       const voice = pickVoice()
       if (voice) u.voice = voice
       u.lang = voice?.lang ?? 'en-GB'
@@ -739,6 +745,7 @@ export function createSpeaker(): Speaker {
 /** Only used when USE_ELEVENLABS is on. Bridge proxy first (it already holds
  *  the key), then a direct key, then null to fall back to the native voice. */
 async function fetchCloudAudio(text: string): Promise<string | null> {
+  text = asCarter(text)
   if (BACKEND === 'bridge') {
     try {
       const res = await fetch(`${BRIDGE_HTTP_URL}/tts`, {

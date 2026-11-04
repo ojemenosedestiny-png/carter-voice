@@ -358,7 +358,9 @@ export const useStore = create<State>((set) => ({
       const turns = [...s.turns]
       const last = turns[turns.length - 1]
       if (!last || last.role !== 'jarvis') return {}
-      turns[turns.length - 1] = { ...last, text: last.text + text }
+      // Whole text re-checked so a name split across two chunks is caught too.
+      const joined = (last.text + text).replace(/\bJarvis\b/gi, 'Carter')
+      turns[turns.length - 1] = { ...last, text: joined }
       return { turns }
     }),
 
