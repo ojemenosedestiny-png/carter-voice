@@ -687,7 +687,10 @@ const handleRequest = async (req, res) => {
     try {
       ;({ text } = JSON.parse(body || '{}'))
       // Carter's name, guaranteed — the old JARVIS name is never spoken.
-      if (typeof text === 'string') text = text.replace(/\bJarvis\b/gi, 'Carter')
+      // ...and said as a crisp "Kar-ter", which can't be heard as "Jarvis".
+      if (typeof text === 'string') {
+        text = text.replace(/\bJarvis\b/gi, 'Carter').replace(/\bCarter\b/gi, 'Kar-ter')
+      }
     } catch {
       res.writeHead(400, cors)
       return res.end('bad json')

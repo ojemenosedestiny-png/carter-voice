@@ -310,9 +310,16 @@ export const asCarter = (text: string) =>
     m === m.toUpperCase() ? 'CARTER' : 'Carter',
   )
 
+/**
+ * How the name is SPOKEN (the screen still shows "Carter"). An American voice
+ * says "Carter" as "CAR-der", which has the same rhythm and vowel as "JAR-vis"
+ * and is easily heard as it. A hard, separated "Kar-ter" cannot be.
+ */
+const sayName = (text: string) => text.replace(/\bCarter\b/gi, 'Kar-ter')
+
 function shape(text: string): string {
   return (
-    asCarter(text)
+    sayName(asCarter(text))
       // Models leak markdown even when told not to, and a synthesiser will
       // happily read "https colon slash slash" out loud. Strip the syntax and
       // keep the words.
