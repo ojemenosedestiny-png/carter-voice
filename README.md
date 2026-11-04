@@ -106,12 +106,39 @@ Keep your phone locked.
    to Carter: *briefing*, *research …*, *remind me at 3pm to …*. Send `/help`
    for the list, `/new` to start a fresh conversation.
 
-Carter only answers your own "Message yourself" chat — nobody else who
-messages you can command it.
+### Let Carter answer your friends (guest mode)
 
-> This uses WhatsApp's linked-devices feature through an unofficial client
-> (Baileys). Personal use in your own chat is low-risk, but WhatsApp doesn't
-> officially support it — never use it for bulk or unsolicited messages.
+Friends message **your normal WhatsApp number** as usual, and Carter answers
+them as your assistant. Turn it on from your "Message yourself" chat:
+
+| Send this | What happens |
+|---|---|
+| `/guests only 2348012345678, 2348098765432` | Carter answers only these people (country code, no +) |
+| `/guests on` | Carter answers everyone who messages you (never groups) |
+| `/guests off` | Nobody — only you can talk to Carter (the default) |
+| `/guests` | Shows the current setting |
+
+What guests get:
+- A friendly assistant that answers general questions and can search the web.
+- **Only** what you shared for them — say *"Remember for my friends that I'm
+  travelling until Monday"*. They can **not** see your email, calendar, files,
+  reminders or anything else you told Carter.
+- Anything that needs you (a favour, a plan, something private) is **passed to
+  your "Message yourself" chat** as 📨 *Ada asks: …*. Answer with
+  **"reply to Ada: yes, come at 6"** and Carter sends it to Ada.
+- When you reply to someone yourself, Carter stays quiet in that chat for 30
+  minutes.
+
+You can also say *"who messaged me?"* or *"tell Bob I'm running late"* any time.
+
+Every guest reply uses your Claude API credit. To make them cheaper, use a
+smaller model for guests: `setx CARTER_GUEST_MODEL "claude-haiku-5-5"`.
+
+> ⚠️ This uses WhatsApp's linked-devices feature through an unofficial client
+> (Baileys). WhatsApp doesn't officially support it, and automatic replies to
+> other people carry more risk of your number being restricted than using it
+> only in your own chat. Prefer `/guests only …` with a few friends over
+> `/guests on`, and never use it for bulk or unsolicited messages.
 
 ## 5. Reminder calls and alarms (free options first)
 
@@ -219,7 +246,9 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `ELEVENLABS_API_KEY` | Premium voice and transcription | browser voice |
 | `JARVIS_VOICE_ID` | ElevenLabs voice id | George |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
-| `CARTER_WHATSAPP_ALLOW` | Extra numbers allowed to command Carter (comma-separated, e.g. `2348012345678`) | none |
+| `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
+| `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |
+| `CARTER_FOUNDER_NAME` | Your name, as Carter says it to friends | your WhatsApp name |
 | `CARTER_TELEGRAM_USER` | Free reminder calls in Telegram | off |
 | `CARTER_NTFY_TOPIC` | Free urgent reminder alarms (ntfy app) | off |
 | `TWILIO_*`, `CARTER_PHONE` | Paid reminder calls to your phone number | off |

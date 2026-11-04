@@ -110,6 +110,16 @@ export function markCalled(id) {
   save(data)
 }
 
+/**
+ * Notes the founder chose to share with people who message them — memories
+ * tagged "public". Guests on WhatsApp see these and nothing else.
+ */
+export function publicMemories() {
+  return load()
+    .items.filter((m) => !m.done && (m.tags ?? []).some((t) => /^public$/i.test(t)))
+    .map((m) => m.text)
+}
+
 export function memoryServer() {
   return createSdkMcpServer({
     name: 'carter_memory',
@@ -140,7 +150,13 @@ export function memoryServer() {
                 '(e.g. 2026-11-06T14:30). Date alone means 9:00 that morning. ' +
                 'Carter phones the founder at this time until it is marked done.',
             ),
-          tags: z.array(z.string()).optional(),
+          tags: z
+            .array(z.string())
+            .optional()
+            .describe(
+              'Add "public" ONLY when the founder says it is for friends or ' +
+                'people who message them — public notes are shown to guests.',
+            ),
         },
         async (args) => {
           const data = load()
