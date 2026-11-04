@@ -54,7 +54,7 @@ import pino from 'pino'
 import QRCode from 'qrcode'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { ALLOW_WRITES, MODEL, EFFORT, MCP_SERVERS, decideTool } from './policy.mjs'
 import { memoryServer, publicMemories, CARTER_HOME } from './memory.mjs'
 
@@ -318,6 +318,12 @@ async function start() {
       }
     }
     if (u.connection === 'open') {
+      // Linked: the old QR code is useless now, so don't leave it lying around.
+      try {
+        unlinkSync(QR_FILE)
+      } catch {
+        /* none */
+      }
       const me = sock.user
       console.log(`[carter:whatsapp] connected as ${me?.name ?? ''} ${me?.id ?? ''}`)
       console.log('[carter:whatsapp] message Carter in your "Message yourself" chat.')

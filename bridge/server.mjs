@@ -34,7 +34,8 @@ import { probeUrl, renderPage } from './page.mjs'
 
 // Carter's brain listens on 8788 — deliberately not JARVIS's 8787, so Carter's
 // interface can never end up talking to an old JARVIS left running.
-const PORT = Number(process.env.JARVIS_BRIDGE_PORT ?? 8788)
+// On a cloud host (Render) the platform says which port to use, in PORT.
+const PORT = Number(process.env.JARVIS_BRIDGE_PORT ?? (process.env.CARTER_CLOUD ? process.env.PORT : undefined) ?? 8788)
 
 /**
  * A crash here takes the whole assistant down mid-sentence, and most of what
@@ -607,7 +608,11 @@ const handleRequest = async (req, res) => {
     if (req.method === 'HEAD') return res.end()
     return res.end(await readFile(file))
   }
-  if (!authorised(req)) {
+  // The platform's health check, which carries no key. It reveals nothing
+  // beyond "Carter is up" and which voice engines exist.
+  const isHealth = req.method === 'GET' && (req.url ?? '').split('?')[0] === '/health'
+  const ok = authorised(req) // always called: it also strips ?key= from the URL
+  if (!isHealth && !ok) {
     console.warn(`[carter] refused a remote request without the right access key`)
     res.writeHead(401, { vary: 'origin' })
     return res.end('unauthorised')
@@ -624,6 +629,20 @@ const handleRequest = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, cors)
     return res.end()
+  }
+
+  // The WhatsApp linking QR code, for a Carter running in the cloud: open
+  // /whatsapp-qr?key=… on any screen and scan it with WhatsApp.
+  if (req.method === 'GET' && req.url === '/whatsapp-qr') {
+    const png = join(process.env.CARTER_HOME || join(homedir(), '.carter'), 'whatsapp-qr.png')
+    try {
+      const data = await readFile(png)
+      res.writeHead(200, { ...cors, 'content-type': 'image/png', 'cache-control': 'no-store' })
+      return res.end(data)
+    } catch {
+      res.writeHead(404, { ...cors, 'content-type': 'text/plain' })
+      return res.end('No WhatsApp QR code right now — WhatsApp is already linked, or still starting. Refresh in a few seconds.')
+    }
   }
 
   if (req.method === 'GET' && req.url === '/health') {

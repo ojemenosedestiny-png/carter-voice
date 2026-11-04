@@ -132,6 +132,34 @@ change the key, delete the `access-key` file and restart. Your PC must stay on
 with Carter running. (To use your Vercel site for the screen instead, run
 `npm run start:phone -- --vercel` with `CARTER_WEB_URL` set.)
 
+### Always on: Carter in the cloud (Render)
+
+Run Carter on Render so your phone, WhatsApp and reminder calls keep working
+when your laptop is off. (Carter in the cloud can't open files or programs on
+your laptop.) Cost: Render **Starter** (~$7/month) + 1 GB disk (~$0.25/month) —
+the free plan sleeps after 15 minutes and forgets everything on restart.
+
+1. Create a **Claude API key** at console.anthropic.com → API Keys (add a few
+   dollars of credit under Billing).
+2. Sign in at **render.com** with GitHub → **New → Blueprint** → choose
+   **carter-voice** → **Apply**. Render reads `render.yaml`: a Starter web
+   service in Frankfurt with a 1 GB disk.
+3. When it asks for environment values, paste your **ANTHROPIC_API_KEY**, and
+   optionally ELEVENLABS_API_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+   TWILIO_FROM and CARTER_PHONE (leave any you don't use empty).
+4. Wait for the first deploy (~3 minutes) until it says **Live**.
+5. In the service → **Environment**, copy the generated **CARTER_ACCESS_KEY**.
+6. Your phone link is your Render address plus the key:
+   `https://carter-xxxx.onrender.com/#bridge=self&key=YOUR-ACCESS-KEY`
+   Open it once in your phone's browser and **Add to Home Screen**.
+7. **WhatsApp:** on your laptop open
+   `https://carter-xxxx.onrender.com/whatsapp-qr?key=YOUR-ACCESS-KEY` and scan
+   the QR code with WhatsApp → Linked devices → Link a device. (If WhatsApp is
+   linked on your laptop's Carter too, unlink one of them — use one at a time.)
+
+Every `git push` redeploys Carter automatically. Memory, reminders and the
+WhatsApp link are kept on the disk across redeploys.
+
 ### Speed
 
 Carter defaults to the fast settings (`sonnet`, effort `low`): a spoken

@@ -1,0 +1,35 @@
+# Carter on Render — always on, even when your laptop is off.
+# Render dashboard → New → Blueprint → pick this repository. See README.
+services:
+  - type: web
+    name: carter
+    runtime: node
+    plan: starter          # the free plan sleeps and forgets; Starter stays on
+    region: frankfurt      # closest Render region to West Africa and Europe
+    buildCommand: npm ci && npm run build
+    startCommand: npm run cloud
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: carter-data    # memory, reminders and the WhatsApp link live here
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: CARTER_HOME
+        value: /var/data
+      - key: CARTER_ACCESS_KEY
+        generateValue: true   # the secret in your phone link
+      - key: ANTHROPIC_API_KEY
+        sync: false           # you paste it in during setup
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: CARTER_PHONE
+        sync: false
