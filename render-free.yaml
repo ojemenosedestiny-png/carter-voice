@@ -1,0 +1,26 @@
+# Carter on Render's FREE plan — for trying Carter out at no cost.
+# Limits of the free plan: it sleeps after 15 minutes without visitors (about a
+# minute to wake), and it has no disk, so Carter's memory and the WhatsApp link
+# are forgotten whenever it restarts. Use render.yaml (Starter) to keep them.
+# Render → New → Blueprint → carter-voice → Blueprint Path: render-free.yaml
+services:
+  - type: web
+    name: carter
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm run cloud
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: CARTER_ACCESS_KEY
+        generateValue: true   # the secret in your phone link
+      - key: CLAUDE_CODE_OAUTH_TOKEN
+        sync: false           # from `claude setup-token` (your Claude subscription)
+      - key: ANTHROPIC_API_KEY
+        sync: false           # or a pay-as-you-go API key instead
+      - key: ELEVENLABS_API_KEY
+        sync: false
