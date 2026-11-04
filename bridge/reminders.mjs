@@ -133,7 +133,20 @@ async function tick() {
 
 /** `node bridge/reminders.mjs --test` sends one test alert on every channel. */
 if (process.argv.includes('--test')) {
-  if (!channels.length) console.log('[carter:reminders] no alert channel is set up yet.')
+  if (!channels.length) {
+    console.log('[carter:reminders] no alert channel is set up yet.')
+    const twilio = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM', 'CARTER_PHONE']
+    const missing = twilio.filter((k) => !env[k])
+    if (missing.length < twilio.length) {
+      console.log(`[carter:reminders] Twilio is missing: ${missing.join(', ')}`)
+    } else {
+      console.log(
+        '[carter:reminders] none of TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, ' +
+          'TWILIO_FROM, CARTER_PHONE, CARTER_TELEGRAM_USER or CARTER_NTFY_TOPIC ' +
+          'is set in this window.',
+      )
+    }
+  }
   for (const ch of channels) {
     try {
       await ch.send('This is a test. Your reminders are working')
