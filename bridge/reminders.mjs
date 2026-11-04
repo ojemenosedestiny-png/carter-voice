@@ -18,7 +18,8 @@
  *    Install the ntfy app and subscribe to that same topic name.
  *
  * 3. Twilio phone call — paid, rings your normal phone number.
- *      TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, CARTER_PHONE
+ *      TWILIO_ACCOUNT_SID, TWILIO_FROM, CARTER_PHONE, and either
+ *      TWILIO_AUTH_TOKEN or an API key: TWILIO_API_KEY (SK...) + TWILIO_API_SECRET
  *
  * Optional:
  *   CARTER_REMIND_EVERY_MIN   minutes between repeats (default 30)
@@ -88,8 +89,13 @@ if (env.CARTER_NTFY_TOPIC) {
   })
 }
 
-if (env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM && env.CARTER_PHONE) {
-  const { TWILIO_ACCOUNT_SID: SID, TWILIO_AUTH_TOKEN: TOKEN } = env
+// Twilio accepts either the account's Auth Token, or an API key (an SK... SID
+// plus its secret), which is safer because it can be revoked on its own.
+const twilioUser = env.TWILIO_API_KEY || env.TWILIO_ACCOUNT_SID
+const twilioPass = env.TWILIO_API_KEY ? env.TWILIO_API_SECRET : env.TWILIO_AUTH_TOKEN
+
+if (env.TWILIO_ACCOUNT_SID && twilioPass && env.TWILIO_FROM && env.CARTER_PHONE) {
+  const SID = env.TWILIO_ACCOUNT_SID
   channels.push({
     name: `Twilio call to ${env.CARTER_PHONE}`,
     send: async (text) => {
@@ -100,7 +106,7 @@ if (env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_FROM && env.CA
         await fetch(`https://api.twilio.com/2010-04-01/Accounts/${SID}/Calls.json`, {
           method: 'POST',
           headers: {
-            Authorization: `Basic ${Buffer.from(`${SID}:${TOKEN}`).toString('base64')}`,
+            Authorization: `Basic ${Buffer.from(`${twilioUser}:${twilioPass}`).toString('base64')}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: new URLSearchParams({ To: env.CARTER_PHONE, From: env.TWILIO_FROM, Twiml: twiml }),
@@ -135,7 +141,9 @@ async function tick() {
 if (process.argv.includes('--test')) {
   if (!channels.length) {
     console.log('[carter:reminders] no alert channel is set up yet.')
-    const twilio = ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM', 'CARTER_PHONE']
+    const twilio = env.TWILIO_API_KEY
+      ? ['TWILIO_ACCOUNT_SID', 'TWILIO_API_SECRET', 'TWILIO_FROM', 'CARTER_PHONE']
+      : ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_FROM', 'CARTER_PHONE']
     const missing = twilio.filter((k) => !env[k])
     if (missing.length < twilio.length) {
       console.log(`[carter:reminders] Twilio is missing: ${missing.join(', ')}`)

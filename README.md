@@ -152,6 +152,18 @@ setx CARTER_NTFY_TOPIC "carter-founder-7k29q4"
 ```powershell
 setx TWILIO_ACCOUNT_SID "AC..."
 setx TWILIO_AUTH_TOKEN "your-auth-token"
+```
+
+Or, instead of the Auth Token, a Twilio API key (safer — revocable on its own):
+
+```powershell
+setx TWILIO_API_KEY "SK..."
+setx TWILIO_API_SECRET "your-api-key-secret"
+```
+
+Then your Twilio number and your own number:
+
+```powershell
 setx TWILIO_FROM "+1xxxxxxxxxx"
 setx CARTER_PHONE "+234xxxxxxxxxx"
 ```
