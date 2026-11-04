@@ -165,40 +165,37 @@ const MAX_UNSPOKEN = 220
 const VOICE_PREF_KEY = 'carter.voice'
 
 /**
- * Rank installed voices by how close they are to the character: a British
- * male, low and level, not a novelty voice.
- *
- * The big win on macOS is the Enhanced/Premium variant of Daniel. The stock
- * "Daniel" is a compact voice from a decade ago and sounds it; the Enhanced
- * download is free (System Settings → Accessibility → Spoken Content → System
- * Voice → Manage Voices) and once installed it appears here automatically.
+ * Rank installed voices for Carter's fallback voice — used only when the
+ * ElevenLabs voice is unavailable. Carter's voice is female, warm and clear,
+ * so female voices rank first, the natural-sounding "Online (Natural)" ones
+ * (Edge/Windows) above the older compact ones. The British male voices JARVIS
+ * preferred are pushed down so the fallback never sounds like JARVIS.
  */
 function score(v: SpeechSynthesisVoice): number {
   const n = v.name.toLowerCase()
   let s = 0
 
-  // The macOS British male, and the closest thing to the character available
-  // without leaving the machine.
-  if (n.startsWith('daniel')) s += 100
-  else if (n.includes('google uk english male')) s += 85
-  else if (/\b(oliver|arthur|jamie|malcolm)\b/.test(n)) s += 80
-  // Newer macOS en-GB male voices — casual, but serviceable.
-  else if (/\b(reed|rocko|eddy)\b/.test(n)) s += 40
+  // Windows/Edge neural voices — by far the most natural option on Windows.
+  if (/(sonia|libby|maisie|aria|jenny|emma|ava|michelle|natasha|clara)/.test(n) && /natural|online/.test(n)) s += 130
+  else if (n.includes('google uk english female')) s += 100
+  else if (/(hazel|kate|serena|stephanie|martha)/.test(n)) s += 90
+  else if (/(susan|zira|samantha|karen|tessa|moira|fiona|allison|zoe)/.test(n)) s += 70
+  else if (n.includes('google us english')) s += 50
 
   // Higher-quality variants of whatever matched above.
   if (n.includes('premium')) s += 30
   else if (n.includes('enhanced')) s += 20
 
-  if (/en[-_]gb/i.test(v.lang)) s += 25
+  if (/en[-_]gb/i.test(v.lang)) s += 15
   else if (/^en/i.test(v.lang)) s += 5
 
-  // Voices that clearly aren't a butler.
+  // Novelty voices.
   if (/grandma|grandpa|bubbles|jester|bells|boing|whisper|zarvox|superstar|trinoids|wobble|bahh|organ|cellos|bad news|good news/.test(n)) {
     s -= 200
   }
-  // Female-presenting names across the English sets.
-  if (/\b(flo|sandy|shelley|kate|serena|fiona|moira|karen|tessa|samantha|zoe|allison|ava|susan)\b/.test(n)) {
-    s -= 60
+  // Male voices, including the British ones JARVIS used.
+  if (/(daniel|george|ryan|thomas|oliver|arthur|jamie|malcolm|reed|rocko|eddy|david|mark|guy|james|alfie|elliot|ethan|william|fred|alex)/.test(n) || n.includes('english male')) {
+    s -= 150
   }
 
   return s
