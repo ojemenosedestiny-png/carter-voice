@@ -301,7 +301,9 @@ function elevenKey() {
   }
 }
 
-const VOICE_ID = process.env.JARVIS_VOICE_ID ?? 'JBFqnCBsd6RMkjVDRZzb'
+// Carter's voice: the founder's chosen ElevenLabs voice. Override with
+// CARTER_VOICE_ID. (JARVIS's old default was George, JBFqnCBsd6RMkjVDRZzb.)
+const VOICE_ID = process.env.JARVIS_VOICE_ID || 'qFjcP4hHD9WIdODvuJOJ'
 
 /**
  * Where /file is permitted to read from, and how big a read may get.
@@ -716,8 +718,14 @@ const handleRequest = async (req, res) => {
         },
       )
       if (!upstream.ok) {
+        const why = await upstream.text()
+        // Say it loudly: when this fails the interface quietly falls back to
+        // the computer's own voice, which sounds nothing like Carter's.
+        console.warn(
+          `[carter] ElevenLabs voice failed (${upstream.status}) — using the computer's voice instead: ${why.slice(0, 200)}`,
+        )
         res.writeHead(upstream.status, cors)
-        return res.end(await upstream.text())
+        return res.end(why)
       }
 
       // Pipe it through rather than buffering. Waiting for the whole file here
@@ -800,8 +808,14 @@ const handleRequest = async (req, res) => {
         body: form,
       })
       if (!upstream.ok) {
+        const why = await upstream.text()
+        // Say it loudly: when this fails the interface quietly falls back to
+        // the computer's own voice, which sounds nothing like Carter's.
+        console.warn(
+          `[carter] ElevenLabs voice failed (${upstream.status}) — using the computer's voice instead: ${why.slice(0, 200)}`,
+        )
         res.writeHead(upstream.status, cors)
-        return res.end(await upstream.text())
+        return res.end(why)
       }
       const data = await upstream.json()
       res.writeHead(200, { ...cors, 'content-type': 'application/json' })
@@ -867,7 +881,7 @@ server.listen(PORT)
 
 console.log(`[carter] bridge listening on ws://localhost:${PORT}`)
 console.log(
-  `[carter] speech ${elevenKey() ? 'via ElevenLabs (key from MCP config)' : 'using browser fallback voice'}`,
+  `[carter] speech ${elevenKey() ? `via ElevenLabs, voice ${VOICE_ID}` : 'using browser fallback voice (no ElevenLabs key found)'}`,
 )
 console.log(`[carter] model ${MODEL} · effort ${EFFORT}`)
 console.log(

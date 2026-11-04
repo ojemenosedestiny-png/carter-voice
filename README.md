@@ -54,7 +54,6 @@ Optional, for the premium ElevenLabs voice:
 
 ```powershell
 setx ELEVENLABS_API_KEY "your-elevenlabs-key"
-setx JARVIS_VOICE_ID "qFjcP4hHD9WIdODvuJOJ"
 ```
 
 **Close PowerShell and open a new one** so these take effect. Then check
@@ -267,7 +266,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `CARTER_MODEL` | Claude model | `claude-opus-5` |
 | `CARTER_EFFORT` | `low` / `medium` / `high` thinking | `high` |
 | `ELEVENLABS_API_KEY` | Premium voice and transcription | browser voice |
-| `JARVIS_VOICE_ID` | ElevenLabs voice id | George |
+| `CARTER_VOICE_ID` | ElevenLabs voice id | `qFjcP4hHD9WIdODvuJOJ` |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
 | `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |

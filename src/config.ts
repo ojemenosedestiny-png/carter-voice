@@ -132,7 +132,7 @@ export const env = {
   anthropicKey: str(import.meta.env.VITE_ANTHROPIC_API_KEY) ?? '',
   elevenKey: str(import.meta.env.VITE_ELEVENLABS_API_KEY) ?? '',
   elevenVoiceId:
-    str(import.meta.env.VITE_ELEVENLABS_VOICE_ID) ?? 'JBFqnCBsd6RMkjVDRZzb',
+    str(import.meta.env.VITE_ELEVENLABS_VOICE_ID) ?? 'qFjcP4hHD9WIdODvuJOJ',
   porcupineKey: str(import.meta.env.VITE_PICOVOICE_ACCESS_KEY) ?? '',
 }
 
