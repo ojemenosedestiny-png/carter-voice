@@ -165,6 +165,30 @@ the free plan sleeps after 15 minutes and forgets everything on restart.
 Every `git push` redeploys Carter automatically. Memory, reminders and the
 WhatsApp link are kept on the disk across redeploys.
 
+### Carter always ready — laptop and iPhone
+
+Add `?autostart` to Carter's address and it powers on and starts listening by
+itself — no INITIALISE tap. Just say **"Hey Carter"**.
+
+**Laptop** (Carter on Render): run once in PowerShell, with your address and key,
+
+```powershell
+setx CARTER_CLOUD_URL "https://carter-yxnu.onrender.com"
+setx CARTER_ACCESS_KEY "your-CARTER_ACCESS_KEY-from-Render"
+```
+
+then double-click **`Carter Window (cloud).bat`** — Carter opens in its own
+window, already listening (allow the microphone the first time). To have it
+every time you log in: right-click the file → **Create shortcut**, press
+**Win+R**, type `shell:startup`, and move the shortcut there.
+
+**iPhone** ("Hey Siri, Carter"): Shortcuts app → **+** → **Add Action** →
+**Open URLs** → enter
+`https://carter-yxnu.onrender.com/?autostart#bridge=self&key=YOUR-ACCESS-KEY`
+→ rename the shortcut **Carter**. Now say **"Hey Siri, Carter"** and Carter
+opens, listening. (iPhones don't let websites listen in the background, so
+Carter must be open on screen to hear you.)
+
 ### Intelligence and speed
 
 Carter runs on Claude **Opus** (the most capable model) at low effort: simple

@@ -591,6 +591,21 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase])
 
+  /**
+   * Auto-start: opened as …/?autostart (the laptop's Carter window, or the
+   * iPhone "Hey Siri, Carter" shortcut), Carter powers itself on and starts
+   * listening — no INITIALISE tap. If the browser still insists on a tap (iOS
+   * sometimes does for sound), the button is simply still there.
+   */
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('autostart')) return
+    const t = setTimeout(() => {
+      if (store.getState().phase === 'offline') void powerOn()
+    }, 600)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // -- level pump + keys ----------------------------------------------------
 
   useEffect(() => {
