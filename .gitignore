@@ -25,3 +25,9 @@ dist-ssr
 
 # Copied out of node_modules by scripts/start.mjs — 34MB of build output.
 public/mediapipe/
+
+# Cloudflare tunnel tool, if downloaded into this folder
+cloudflared.exe
+# Carter logs and test files
+carter-*.txt
+carter-test.mp3
