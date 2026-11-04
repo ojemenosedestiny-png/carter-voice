@@ -99,20 +99,30 @@ if (env.TWILIO_ACCOUNT_SID && twilioPass && env.TWILIO_FROM && env.CARTER_PHONE)
   channels.push({
     name: `Twilio call to ${env.CARTER_PHONE}`,
     send: async (text) => {
-      const twiml =
-        `<Response><Pause length="1"/><Say voice="Polly.Amy">${escapeXml(spoken(text))}</Say>` +
-        `<Pause length="1"/><Say voice="Polly.Amy">Again: ${escapeXml(text)}.</Say></Response>`
-      await check(
-        await fetch(`https://api.twilio.com/2010-04-01/Accounts/${SID}/Calls.json`, {
+      const twimlFor = (voice) =>
+        `<Response><Pause length="1"/><Say${voice}>${escapeXml(spoken(text))}</Say>` +
+        `<Pause length="1"/><Say${voice}>Again: ${escapeXml(text)}.</Say></Response>`
+      const place = async (params) =>
+        fetch(`https://api.twilio.com/2010-04-01/Accounts/${SID}/Calls.json`, {
           method: 'POST',
           headers: {
             Authorization: `Basic ${Buffer.from(`${twilioUser}:${twilioPass}`).toString('base64')}`,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: new URLSearchParams({ To: env.CARTER_PHONE, From: env.TWILIO_FROM, Twiml: twiml }),
-        }),
-        'Twilio',
-      )
+          body: new URLSearchParams({ To: env.CARTER_PHONE, From: env.TWILIO_FROM, ...params }),
+        })
+
+      let res = await place({ Twiml: twimlFor(' voice="Polly.Amy"') })
+      if (res.status === 400) {
+        // Trial accounts refuse inline TwiML. Twilio's own "echo" twimlet
+        // serves the same instructions from a URL, which trial accounts allow.
+        const body = await res.text()
+        console.log('[carter:reminders] Twilio refused inline speech, retrying via URL:', body.slice(0, 160))
+        const url =
+          'https://twimlets.com/echo?' + new URLSearchParams({ Twiml: twimlFor('') })
+        res = await place({ Url: url })
+      }
+      await check(res, 'Twilio')
     },
   })
 }
