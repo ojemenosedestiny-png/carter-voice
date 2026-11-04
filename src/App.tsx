@@ -551,7 +551,17 @@ export default function App() {
       } catch {
         /* ignore */
       }
-      void respond('Good morning, Carter. Give me my daily briefing.')
+      void respond(
+        'Good morning, Carter. Introduce yourself in one sentence as Carter, ' +
+          'then give me my daily briefing.',
+      )
+    } else {
+      // Every other start-up: Carter introduces itself, in Carter's voice.
+      // (This used to be baked into the start-up music as JARVIS's line.)
+      const hello = createSpeaker()
+      speaker.current = hello
+      hello.say('Allow me to introduce myself. I am Carter, your personal assistant.')
+      void hello.end()
     }
   }
 
