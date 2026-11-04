@@ -65,7 +65,7 @@ npm run setup
 ```
 
 > Pay-as-you-go tip: Carter defaults to the strongest model. To spend less,
-> `setx CARTER_MODEL "claude-sonnet-5"`.
+> `setx CARTER_MODEL "opus"`. Carter already defaults to the faster `sonnet`.
 
 ## 3. Start Carter
 
@@ -186,7 +186,7 @@ What guests get:
 You can also say *"who messaged me?"* or *"tell Bob I'm running late"* any time.
 
 Every guest reply uses your Claude API credit. To make them cheaper, use a
-smaller model for guests: `setx CARTER_GUEST_MODEL "claude-haiku-5-5"`.
+smaller model for guests: `setx CARTER_GUEST_MODEL "haiku"`.
 
 > ⚠️ This uses WhatsApp's linked-devices feature through an unofficial client
 > (Baileys). WhatsApp doesn't officially support it, and automatic replies to
@@ -301,7 +301,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `CARTER_VOICE_ID` | ElevenLabs voice id | `CwhRBWXzGAHq8TQ4Fs17` (Roger) |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
-| `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |
+| `CARTER_GUEST_MODEL` | Model for replies to friends (e.g. `haiku` for cheapest) | same as `CARTER_MODEL` |
 | `CARTER_WEB_URL` | Your Vercel/web address for the interface | `http://localhost:5180` |
 | `CARTER_FOUNDER_NAME` | Your name, as Carter says it to friends | your WhatsApp name |
 | `CARTER_TELEGRAM_USER` | Free reminder calls in Telegram | off |
