@@ -266,7 +266,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `CARTER_MODEL` | Claude model | `claude-opus-5` |
 | `CARTER_EFFORT` | `low` / `medium` / `high` thinking | `high` |
 | `ELEVENLABS_API_KEY` | Premium voice and transcription | browser voice |
-| `CARTER_VOICE_ID` | ElevenLabs voice id | `p0LiqI2fNYshOoFq2uvR` (the founder's cloned voice) |
+| `CARTER_VOICE_ID` | ElevenLabs voice id | `CwhRBWXzGAHq8TQ4Fs17` (Roger) |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
 | `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |
