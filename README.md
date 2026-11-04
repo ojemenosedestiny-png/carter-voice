@@ -24,7 +24,7 @@ computer is on.
 | ☀️ **Daily briefing** | First time you open Carter each day: calendar, important email, reminders |
 | 🔎 **Research** | "Research my top three competitors" — summary spoken, full report on screen |
 | 📧 **Gmail & Calendar** | Reads and summarises your mail and schedule (see setup below) |
-| 📞 **Reminder calls** | "Remind me at 5pm to send the invoice" — Carter **calls your phone** at 5pm, and again every 30 minutes until you say it's done |
+| 📞 **Reminder calls** | "Remind me at 5pm to send the invoice" — Carter **calls you on Telegram** (free) or alarms your phone at 5pm, and again every 30 minutes until you say it's done |
 | 🖥️ **Full control** | In full-control mode Carter can run commands, manage files, reply to email and operate your browser |
 
 ---
@@ -113,14 +113,41 @@ messages you can command it.
 > (Baileys). Personal use in your own chat is low-risk, but WhatsApp doesn't
 > officially support it — never use it for bulk or unsolicited messages.
 
-## 5. Reminder phone calls (Twilio)
+## 5. Reminder calls and alarms (free options first)
 
-Carter calls you through **Twilio** (https://www.twilio.com — a trial account
-is free and can call your own verified number; a paid number is about $1/month
-plus a few cents per call).
+When a reminder is due, Carter alerts you, then again every 30 minutes (up to
+3 times) until you tell it you've done it. Set up **one or more** of these:
 
-1. Sign up, verify your own phone number, and get a Twilio phone number.
-2. From the Twilio console copy your **Account SID** and **Auth Token**, then:
+### Option A — Telegram call (free, recommended)
+
+Your phone **rings in Telegram** and a voice reads the reminder. Uses the free
+CallMeBot service; no ID check.
+
+1. Install **Telegram** and set a username (Telegram → Settings → Username).
+2. In Telegram, search for **@CallMeBot_txtbot**, open it and press **Start**
+   (this allows it to call you).
+3. In PowerShell (with your own username):
+
+```powershell
+setx CARTER_TELEGRAM_USER "@yourusername"
+```
+
+### Option B — ntfy alarm (free)
+
+A loud, urgent notification on your phone. No account, no ID.
+
+1. Install the **ntfy** app (Play Store / App Store).
+2. Invent a long secret topic name, e.g. `carter-founder-7k29q4` (anyone who
+   knows the name can see your alerts, so make it hard to guess).
+3. In the app tap **+**, enter that topic name, and subscribe. In the
+   subscription's settings, set notifications for urgent messages to alarm.
+4. In PowerShell:
+
+```powershell
+setx CARTER_NTFY_TOPIC "carter-founder-7k29q4"
+```
+
+### Option C — Twilio call to your normal number (paid, ID check)
 
 ```powershell
 setx TWILIO_ACCOUNT_SID "AC..."
@@ -129,9 +156,17 @@ setx TWILIO_FROM "+1xxxxxxxxxx"
 setx CARTER_PHONE "+234xxxxxxxxxx"
 ```
 
-Open a new PowerShell and restart Carter. Now "Remind me at 5pm to send the
-invoice" makes your phone ring at 5pm. Carter calls again every 30 minutes (up
-to 3 times) until you tell it "I've sent the invoice". Change with
+### Test it
+
+Open a **new** PowerShell, then:
+
+```powershell
+cd $HOME\carter-voice
+node bridge/reminders.mjs --test
+```
+
+Your phone should ring or alarm within a few seconds. Then restart Carter and
+say "Remind me at 3pm to call the bank". Change the timing with
 `CARTER_REMIND_EVERY_MIN` and `CARTER_REMIND_MAX_CALLS`.
 
 ## 6. Gmail & Google Calendar
@@ -173,7 +208,9 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `JARVIS_VOICE_ID` | ElevenLabs voice id | George |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_ALLOW` | Extra numbers allowed to command Carter (comma-separated, e.g. `2348012345678`) | none |
-| `TWILIO_*`, `CARTER_PHONE` | Reminder phone calls | off |
+| `CARTER_TELEGRAM_USER` | Free reminder calls in Telegram | off |
+| `CARTER_NTFY_TOPIC` | Free urgent reminder alarms (ntfy app) | off |
+| `TWILIO_*`, `CARTER_PHONE` | Paid reminder calls to your phone number | off |
 
 ## How it's built
 
@@ -188,3 +225,4 @@ daily briefing, the WhatsApp channel (`bridge/whatsapp.mjs`), reminder calls
 - `npm run start:writes` — the same, with full control
 - `npm run whatsapp` — link WhatsApp / run it alone
 - `npm run setup` — check your machine
+- `node bridge/reminders.mjs --test` — send a test reminder alert
