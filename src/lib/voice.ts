@@ -78,7 +78,7 @@ const WAKE_DEBOUNCE = 1500
  * indication why. Better a rare false wake than a name that does not answer.
  */
 const WAKE =
-  /\b(?:hey|hi|ok|okay|yo)?\s*(?:carter|karter|carta|cartar|cater|kata|kater|qatar|katta|garter)\b(?!'s)/i
+  /\b(?:hey|hi|ok|okay|yo)?\s*(?:carter|karter|carta|cartar|cater|kata|kater|qatar|katta|garter|carder|kartar|karta|kurta|cotter|kahta|carther)\b(?!'s)/i
 
 /** Everything after the wake phrase, which is usually the actual command. */
 function afterWake(text: string): string {
@@ -704,7 +704,9 @@ function startBrowserVoice(h: VoiceHandlers): Voice {
     clearSilence()
     // Endpoint on a short quiet gap; the ElevenLabs path tunes this more
     // finely, but a fixed window is plenty for the fallback.
-    silenceTimer = setTimeout(emit, 900)
+    // Short, so the question goes the moment you stop — the assembler still
+    // waits if the sentence is plainly unfinished.
+    silenceTimer = setTimeout(emit, 650)
   }
 
   const onResult = (e: any) => {

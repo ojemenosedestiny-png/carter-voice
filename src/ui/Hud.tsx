@@ -10,7 +10,7 @@ import { GestureGuide } from './GestureGuide'
 const statusText: Record<Phase, string> = {
   offline: 'OFFLINE',
   boot: 'INITIALISING',
-  dormant: 'STANDBY — SAY “HEY CARTER”',
+  dormant: 'SAY “HEY CARTER” — OR TAP THE CIRCLE',
   waking: 'ONLINE',
   listening: 'LISTENING',
   thinking: 'PROCESSING',

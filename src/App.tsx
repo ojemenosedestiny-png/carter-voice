@@ -63,7 +63,7 @@ const newId = () =>
 
 /** The same mishearings voice.ts accepts for the wake word — otherwise a turn
  *  that woke him as "travis" gets that word sent on to the model as a question. */
-const NAME = '(?:carter|karter|carta|cartar|cater|kata|kater|qatar|katta|garter)'
+const NAME = '(?:carter|karter|carta|cartar|cater|kata|kater|qatar|katta|garter|carder|kartar|karta|kurta|cotter|kahta|carther)'
 /** A bare vocative — "Jarvis", "hey jarvis" — with nothing asked. */
 const BARE_NAME = new RegExp(`^(?:hey|hi|ok|okay|yo)?\\s*${NAME}[\\s,.!?]*$`, 'i')
 /** A leading vocative on a real command: "Jarvis, what's the weather". */
@@ -730,9 +730,34 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
 
+    /**
+     * Tap to talk: a tap on the reactor (the 3D scene) starts listening at
+     * once — no wake word. In a noisy room, with friends talking, the phone's
+     * recogniser misses "Hey Carter" far more often than a tap misses.
+     * A tap while he is talking cuts him off and listens instead.
+     */
+    const onTap = (e: PointerEvent) => {
+      if ((e.target as HTMLElement | null)?.tagName !== 'CANVAS') return
+      const phase = store.getState().phase
+      if (phase === 'offline') {
+        void powerOn()
+      } else if (phase === 'boot') {
+        /* the boot sequence owns the phase */
+      } else if (phase === 'thinking' || phase === 'tooling' || phase === 'speaking') {
+        onSpeechStart()
+        listen(AWAIT_SPEECH_MS)
+      } else if (phase !== 'listening') {
+        store.getState().setError(null)
+        sfx.play('wake')
+        listen(AWAIT_SPEECH_MS)
+      }
+    }
+    window.addEventListener('pointerdown', onTap)
+
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onTap)
       clearIdle()
       if (voicePoll.current) clearInterval(voicePoll.current)
       voice.current?.stop()
