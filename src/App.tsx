@@ -30,7 +30,7 @@ import {
   type Msg,
 } from './lib/brain'
 import { startAnalyser, micLevel } from './lib/audio'
-import { probeCapabilities } from './lib/capabilities'
+import { probeCapabilities, wrongBrain } from './lib/capabilities'
 import { env } from './config'
 
 /**
@@ -513,6 +513,15 @@ export default function App() {
     // first turn already uses ElevenLabs when a key is present and the browser
     // fallback when it is not — no flag, no reload.
     await probeCapabilities()
+    if (wrongBrain) {
+      store
+        .getState()
+        .setError(
+          'This screen is connected to a different assistant (probably an old JARVIS), ' +
+            'not Carter. Close every black window, run Stop-Process -Name node -Force, ' +
+            'then start Carter again.',
+        )
+    }
 
     // One voice loop, started once, running until the page closes.
     voice.current = await startVoice({

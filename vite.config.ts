@@ -8,7 +8,10 @@ export default defineConfig({
     // Honour PORT so a second instance can run alongside the first. The bridge
     // only accepts sockets from localhost:5173-5199, so stay inside that range
     // or set JARVIS_ALLOWED_ORIGINS to match.
-    port: Number(process.env.PORT) || 5173,
+    // Carter uses 5180 so it never collides with JARVIS on 5173, and fails
+    // loudly instead of drifting to another port if Carter is already open.
+    port: Number(process.env.PORT) || 5180,
+    strictPort: true,
   },
   optimizeDeps: {
     // kokoro-js pulls in `phonemizer`, which carries espeak-ng as inline WASM.

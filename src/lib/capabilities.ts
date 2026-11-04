@@ -44,6 +44,9 @@ export function capabilitiesProbed(): boolean {
  * engine. Never throws: a failed probe simply leaves the browser fallback in
  * place, which is the correct behaviour when the bridge is unreachable.
  */
+/** True when the brain that answered is not Carter's (e.g. an old JARVIS). */
+export let wrongBrain = false
+
 export async function probeCapabilities(): Promise<Capabilities> {
   if (BACKEND !== 'bridge') {
     // No bridge to ask. Direct mode has no server-side speech, so browser only.
@@ -56,8 +59,9 @@ export async function probeCapabilities(): Promise<Capabilities> {
       signal: AbortSignal.timeout(3000),
     })
     if (res.ok) {
-      const h = (await res.json()) as { stt?: boolean; tts?: boolean }
+      const h = (await res.json()) as { stt?: boolean; tts?: boolean; assistant?: string }
       current = { stt: Boolean(h.stt), tts: Boolean(h.tts) }
+      wrongBrain = h.assistant !== 'carter'
     }
   } catch {
     // Bridge down or slow — stay on the browser engines rather than blocking

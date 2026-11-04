@@ -30,7 +30,9 @@ import { isAbsolute, join, relative, resolve as resolvePath } from 'node:path'
 import { openRemote, proxyError, vetTarget, PROXY_UA } from './net.mjs'
 import { probeUrl, renderPage } from './page.mjs'
 
-const PORT = Number(process.env.JARVIS_BRIDGE_PORT ?? 8787)
+// Carter's brain listens on 8788 — deliberately not JARVIS's 8787, so Carter's
+// interface can never end up talking to an old JARVIS left running.
+const PORT = Number(process.env.JARVIS_BRIDGE_PORT ?? 8788)
 
 /**
  * A crash here takes the whole assistant down mid-sentence, and most of what
@@ -531,7 +533,7 @@ const handleRequest = async (req, res) => {
     // student with nothing configured still has a working assistant.
     const eleven = Boolean(elevenKey())
     res.writeHead(200, { ...cors, 'content-type': 'application/json' })
-    return res.end(JSON.stringify({ ok: true, tts: eleven, stt: eleven }))
+    return res.end(JSON.stringify({ ok: true, assistant: 'carter', tts: eleven, stt: eleven }))
   }
 
   // Serve local image files to the page. Screenshots and generated art land on
@@ -845,6 +847,20 @@ const wss = new WebSocketServer({
     done(true)
   },
 })
+const onListenError = (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(
+      `\n[carter] Port ${PORT} is already in use — Carter is probably already running ` +
+        'in another window.\n[carter] Close the other Carter window (or run: ' +
+        'Stop-Process -Name node -Force) and start again.\n',
+    )
+    process.exit(1)
+  }
+  throw err
+}
+// The WebSocket server re-emits the HTTP server's errors, so both need it.
+server.on('error', onListenError)
+wss.on('error', onListenError)
 server.listen(PORT)
 
 console.log(`[jarvis] bridge listening on ws://localhost:${PORT}`)

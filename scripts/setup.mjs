@@ -110,7 +110,7 @@ if (elSource) {
 // --- How to run ----------------------------------------------------------
 console.log('');
 console.log('To run Carter:');
-console.log('  npm start               # the brain and the face (open http://localhost:5173 in Chrome)');
+console.log('  npm start               # the brain and the face (open http://localhost:5180 in Chrome)');
 console.log('  npm run whatsapp        # optional: talk to Carter from your phone on WhatsApp');
 console.log('');
 console.log('Then click INITIALISE and say "Hey Carter".');

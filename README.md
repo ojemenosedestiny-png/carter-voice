@@ -18,7 +18,7 @@ computer is on.
 
 | | |
 |---|---|
-| 🎙️ **Voice** | Say "Hey Carter" in the premium gold interface at http://localhost:5173 |
+| 🎙️ **Voice** | Say "Hey Carter" in the premium gold interface at http://localhost:5180 |
 | 📱 **WhatsApp** | Message Carter from your phone, from anywhere, in your "Message yourself" chat |
 | 🧠 **Memory** | "Remember that…", "What do you remember about…?" — saved on your PC |
 | ☀️ **Daily briefing** | First time you open Carter each day: calendar, important email, reminders |
@@ -271,7 +271,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
 | `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |
-| `CARTER_WEB_URL` | Your Vercel/web address for the interface | `http://localhost:5173` |
+| `CARTER_WEB_URL` | Your Vercel/web address for the interface | `http://localhost:5180` |
 | `CARTER_FOUNDER_NAME` | Your name, as Carter says it to friends | your WhatsApp name |
 | `CARTER_TELEGRAM_USER` | Free reminder calls in Telegram | off |
 | `CARTER_NTFY_TOPIC` | Free urgent reminder alarms (ntfy app) | off |
