@@ -1,6 +1,6 @@
 import type { AskHandlers } from './anthropic'
 import { useStore, type Blade, type Panel } from '../store'
-import { BRIDGE_WS_URL, withKey } from '../config'
+import { BRIDGE_IS_REMOTE, BRIDGE_KEY, BRIDGE_WS_URL, withKey } from '../config'
 
 /**
  * Client for the local bridge (see bridge/server.mjs).
@@ -282,7 +282,16 @@ function connect(): Promise<WebSocket> {
       const brainOnThisPc = /\/\/(localhost|127\.0\.0\.1)[:/]/.test(BRIDGE_WS_URL)
       settle(
         new Error(
-          onThisPc
+          BRIDGE_IS_REMOTE && !BRIDGE_KEY
+            ? 'Carter needs your access key on this device. Open your Carter link once ' +
+                'with the key on the end: ' +
+                `${location.origin}/#bridge=self&key=YOUR-ACCESS-KEY` +
+                ' (your key is CARTER_ACCESS_KEY on Render).'
+            : BRIDGE_IS_REMOTE && !brainOnThisPc
+              ? 'Cannot reach Carter. If this keeps happening, the access key saved on ' +
+                  'this device may be wrong — open your link with the key again: ' +
+                  `${location.origin}/#bridge=self&key=YOUR-ACCESS-KEY`
+              : onThisPc
             ? 'Cannot reach Carter\'s brain. Start Carter on this PC (double-click ' +
                 '"Start Carter"), then refresh this page.'
             : brainOnThisPc

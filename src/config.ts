@@ -133,8 +133,26 @@ if (typeof window !== 'undefined') {
 }
 
 export const BRIDGE_KEY = REMOTE.key ?? ''
+
+/**
+ * Opened from anywhere but this computer (e.g. carter-xxxx.onrender.com, or a
+ * home-screen icon that has no saved link), the brain is the very site the
+ * page came from — never "localhost", which on a phone means the phone.
+ */
+const servedRemotely =
+  typeof window !== 'undefined' &&
+  !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname) &&
+  !/\.vercel\.app$/.test(window.location.hostname)
+const sameSite = () =>
+  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
+
 export const BRIDGE_WS_URL =
-  REMOTE.bridge ?? str(import.meta.env.VITE_BRIDGE_URL) ?? 'ws://localhost:8788'
+  REMOTE.bridge ??
+  str(import.meta.env.VITE_BRIDGE_URL) ??
+  (servedRemotely ? sameSite() : 'ws://localhost:8788')
+
+/** True when this page is talking to a brain that is not on this computer. */
+export const BRIDGE_IS_REMOTE = !/\/\/(localhost|127\.0\.0\.1)[:/]/.test(BRIDGE_WS_URL)
 export const BRIDGE_HTTP_URL = BRIDGE_WS_URL.replace(/^ws/, 'http')
 
 /** Add the access key to a bridge URL (needed only when used remotely). */
