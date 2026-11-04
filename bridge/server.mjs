@@ -697,7 +697,29 @@ const handleRequest = async (req, res) => {
           const left = (s.character_limit ?? 0) - (s.character_count ?? 0)
           row(true, 'ElevenLabs voice', `Key works · plan ${s.tier ?? '?'} · ${left} characters left · voice ${VOICE_ID}`)
         } else {
-          row(false, 'ElevenLabs voice', `Key refused (${r.status}) — make an unrestricted key and update ELEVENLABS_API_KEY`)
+          // A key restricted to speech can't read account details but may
+          // still speak — test what Carter actually uses: one tiny line.
+          const speak = await fetch(
+            `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_22050_32`,
+            {
+              method: 'POST',
+              headers: { 'xi-api-key': key, 'content-type': 'application/json' },
+              body: JSON.stringify({ text: 'OK.', model_id: process.env.CARTER_TTS_MODEL || 'eleven_flash_v2_5' }),
+              signal: AbortSignal.timeout(10000),
+            },
+          )
+          if (speak.ok) {
+            row(true, 'ElevenLabs voice', `Speaking works · voice ${VOICE_ID} (key is restricted, so credit left can't be shown — check that Speech to Text is allowed too)`)
+          } else {
+            const why = (await speak.text()).slice(0, 160)
+            row(
+              false,
+              'ElevenLabs voice',
+              speak.status === 402
+                ? `Voice ${VOICE_ID} needs a paid ElevenLabs plan, or credit has run out — ${why}`
+                : `Key refused (${speak.status}) — make a new key with "Restrict key" OFF and update ELEVENLABS_API_KEY · ${why}`,
+            )
+          }
         }
       } catch (err) {
         row(false, 'ElevenLabs voice', `Could not check: ${err.message}`)
