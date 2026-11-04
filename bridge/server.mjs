@@ -708,7 +708,7 @@ const handleRequest = async (req, res) => {
             text,
             // Flash is the low-latency model — a conversation needs speed more
             // than it needs the last few percent of quality.
-            model_id: 'eleven_flash_v2_5',
+            model_id: process.env.CARTER_TTS_MODEL || 'eleven_flash_v2_5',
             voice_settings: {
               stability: 0.4,
               similarity_boost: 0.75,
@@ -881,7 +881,7 @@ server.listen(PORT)
 
 console.log(`[carter] bridge listening on ws://localhost:${PORT}`)
 console.log(
-  `[carter] speech ${elevenKey() ? `via ElevenLabs, voice ${VOICE_ID}` : 'using browser fallback voice (no ElevenLabs key found)'}`,
+  `[carter] speech ${elevenKey() ? `via ElevenLabs, voice ${VOICE_ID}, model ${process.env.CARTER_TTS_MODEL || 'eleven_flash_v2_5'}` : 'using browser fallback voice (no ElevenLabs key found)'}`,
 )
 console.log(`[carter] model ${MODEL} · effort ${EFFORT}`)
 console.log(
