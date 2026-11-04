@@ -303,7 +303,9 @@ function elevenKey() {
 
 // Carter's voice: ElevenLabs "Roger" (laid-back, resonant), chosen by the founder. Override with
 // CARTER_VOICE_ID. (JARVIS's old default was George, JBFqnCBsd6RMkjVDRZzb.)
-const VOICE_ID = process.env.JARVIS_VOICE_ID || 'CwhRBWXzGAHq8TQ4Fs17'
+// Only CARTER_VOICE_ID counts — an old JARVIS_VOICE_ID left on the machine
+// from JARVIS is deliberately ignored.
+const VOICE_ID = process.env.CARTER_VOICE_ID || 'CwhRBWXzGAHq8TQ4Fs17'
 
 /**
  * Where /file is permitted to read from, and how big a read may get.
