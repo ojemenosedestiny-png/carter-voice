@@ -496,6 +496,11 @@ function corsFor(req) {
   if (origin) {
     headers['access-control-allow-origin'] = origin
     headers['access-control-allow-headers'] = 'content-type'
+    // Chrome asks before a public site (the Vercel interface) may reach this
+    // machine; answering yes is safe because the origin was already checked.
+    if (req.headers['access-control-request-private-network'] === 'true') {
+      headers['access-control-allow-private-network'] = 'true'
+    }
   }
   return headers
 }

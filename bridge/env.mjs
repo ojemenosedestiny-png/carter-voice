@@ -13,3 +13,12 @@ for (const [key, value] of Object.entries(process.env)) {
 // `--writes` on the command line turns actions on. This works the same in
 // Windows PowerShell, where the `NAME=value command` form does not.
 if (process.argv.includes('--writes')) process.env.JARVIS_ALLOW_WRITES = '1'
+
+// CARTER_WEB_URL is where the founder opens Carter's interface — for example
+// https://carter-voice.vercel.app. The bridge on this machine must trust that
+// exact address, so it is added to the allowed origins here.
+if (process.env.CARTER_WEB_URL) {
+  const web = new URL(process.env.CARTER_WEB_URL).origin
+  const list = (process.env.JARVIS_ALLOWED_ORIGINS ?? '').split(',').filter(Boolean)
+  if (!list.includes(web)) process.env.JARVIS_ALLOWED_ORIGINS = [...list, web].join(',')
+}

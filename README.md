@@ -83,6 +83,29 @@ $s = (New-Object -ComObject WScript.Shell).CreateShortcut("$env:APPDATA\Microsof
 To start Carter automatically when you log in, copy that shortcut into the
 folder that opens with **Win+R → `shell:startup`**.
 
+### Your own web address (Vercel)
+
+Instead of `localhost`, you can open Carter at your own address such as
+**https://carter-voice.vercel.app**. Vercel hosts the interface; the brain
+(memory, WhatsApp, calls, email) still runs on your PC, so `Start Carter.bat`
+must be running and you open the address **on that same PC**.
+
+1. Sign in at https://vercel.com with GitHub, click **Add New → Project**, pick
+   **carter-voice**, and click **Deploy** (no settings to change).
+2. Note the address Vercel gives you (Project → Domains). You can rename it
+   under **Settings → Domains**, or attach a domain you own.
+3. Tell your PC's Carter to trust that address and open it (PowerShell):
+
+```powershell
+setx CARTER_WEB_URL "https://carter-voice.vercel.app"
+```
+
+4. Open a new PowerShell, start Carter, and open your address. The first time,
+   Chrome asks to let the site **access devices on your local network** — click
+   **Allow** (that is the page reaching Carter's brain on your PC).
+
+Every `git push` to GitHub redeploys the site automatically.
+
 ### Full control mode
 
 `Start Carter.bat` is **read-only**: Carter can look at anything and remember
@@ -248,6 +271,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |
 | `CARTER_WHATSAPP_GUESTS` | Starting guest setting: `off`, `all`, or numbers (change any time with `/guests`) | `off` |
 | `CARTER_GUEST_MODEL` | Cheaper model for replies to friends | same as `CARTER_MODEL` |
+| `CARTER_WEB_URL` | Your Vercel/web address for the interface | `http://localhost:5173` |
 | `CARTER_FOUNDER_NAME` | Your name, as Carter says it to friends | your WhatsApp name |
 | `CARTER_TELEGRAM_USER` | Free reminder calls in Telegram | off |
 | `CARTER_NTFY_TOPIC` | Free urgent reminder alarms (ntfy app) | off |
