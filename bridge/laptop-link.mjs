@@ -103,8 +103,9 @@ function connect() {
   const url = `${CLOUD.replace(/^http/, 'ws')}/laptop?key=${encodeURIComponent(KEY)}`
   const ws = new WebSocket(url, { headers: { origin: CLOUD } })
 
+  let openedAt = 0
   ws.on('open', () => {
-    delay = 2000
+    openedAt = Date.now()
     ws.send(JSON.stringify({ type: 'hello', name: hostname() }))
     console.log(
       `[laptop] linked to Carter at ${CLOUD} — ${ALLOW_WRITES ? 'FULL CONTROL' : 'read-only'}. ` +
@@ -137,8 +138,22 @@ function connect() {
     )
   })
   ws.on('error', (err) => console.log(`[laptop] connection problem: ${err.message}`))
-  ws.on('close', () => {
-    console.log(`[laptop] not connected — trying again in ${Math.round(delay / 1000)}s`)
+  ws.on('close', (code, reason) => {
+    const why = reason?.toString() || ''
+    // Only a connection that stayed up a while counts as healthy; otherwise
+    // keep backing off rather than reconnecting in a tight loop.
+    if (openedAt && Date.now() - openedAt > 30_000) delay = 2000
+    if (code === 4000) {
+      console.log(
+        '[laptop] another "Link Laptop to Carter" is connected to Carter, so this one was\n' +
+          '         replaced. Close the extra window (check the taskbar and shell:startup) —\n' +
+          '         only one laptop link should run.',
+      )
+      delay = Math.max(delay, 30_000)
+    } else {
+      console.log(`[laptop] disconnected (code ${code}${why ? `, ${why}` : ''})`)
+    }
+    console.log(`[laptop] trying again in ${Math.round(delay / 1000)}s`)
     setTimeout(connect, delay)
     delay = Math.min(delay * 2, 60_000)
   })
