@@ -64,8 +64,8 @@ cd $HOME\carter-voice
 npm run setup
 ```
 
-> Pay-as-you-go tip: Carter defaults to the strongest model. To spend less,
-> `setx CARTER_MODEL "opus"`. Carter already defaults to the faster `sonnet`.
+> Carter defaults to the fast, cheaper `sonnet` model. For the deepest answers:
+> `setx CARTER_MODEL "opus"`.
 
 ## 3. Start Carter
 
