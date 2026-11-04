@@ -115,7 +115,9 @@ function remote(): { bridge?: string; key?: string } {
     store.set('carter.bridge', bridge)
   }
   if (hash.get('key')) {
-    key = hash.get('key')!
+    // URLSearchParams reads "+" as a space; keys (e.g. Render's generated
+    // ones) can contain "+", so put it back.
+    key = hash.get('key')!.replace(/ /g, '+')
     store.set('carter.key', key)
   }
   if (hash.has('bridge') || hash.has('key') || hash.has('local')) {
