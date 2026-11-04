@@ -165,6 +165,19 @@ the free plan sleeps after 15 minutes and forgets everything on restart.
 Every `git push` redeploys Carter automatically. Memory, reminders and the
 WhatsApp link are kept on the disk across redeploys.
 
+### Status page — is everything working?
+
+Open `https://YOUR-ADDRESS.onrender.com/status?key=YOUR-ACCESS-KEY` to see,
+at a glance: the brain and how it signs in, the ElevenLabs key and credit left,
+WhatsApp, reminder calls, the laptop link, Gmail and Calendar, and whether
+Carter may take actions. ✅ working · 🟡 needs attention · ❌ not set up.
+
+**Gmail and Calendar:** connect them at **claude.ai → Settings → Connectors**
+(Carter uses your Claude login). If the cloud Carter can't see them, it asks
+your laptop instead (laptop link), which can also use Gmail in your Chrome.
+To let Carter **send** email or change your calendar, add
+`CARTER_ALLOW_WRITES` = `1` on Render.
+
 ### Laptop link — Carter does things on your laptop, from your phone
 
 With Carter on Render, link your laptop so that anything you ask from your

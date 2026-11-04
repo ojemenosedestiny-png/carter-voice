@@ -254,6 +254,11 @@ The founder's laptop — the \`carter_laptop\` tools:
   it and reports back; tell the founder the outcome in a sentence or two.
 - If the laptop is not connected, say so once: it needs to be switched on with
   "Link Laptop to Carter" running.
+- Email and calendar: use your own Gmail / Google Calendar tools when you have
+  them. If you do not, but the laptop is connected, ask the laptop with
+  \`laptop_do\` — it has the founder's Gmail and Calendar connectors and their
+  signed-in Chrome (e.g. "Using Gmail, list today's unread emails from real
+  people with sender and subject").
 
 Your memory — the \`carter_memory\` tools:
 - Everything the founder tells you to keep goes in memory with \`remember\`:
@@ -308,6 +313,9 @@ Using tools:
  * machine — no reason to make you paste it into a second .env file. The browser
  * never sees it: it POSTs text to /tts here and gets audio back.
  */
+/** What the most recent conversation could connect to — for the status page. */
+let lastServers = null
+
 function elevenKey() {
   if (process.env.ELEVENLABS_API_KEY) return process.env.ELEVENLABS_API_KEY
   try {
@@ -663,6 +671,90 @@ const handleRequest = async (req, res) => {
 
   // The laptop link for Carter's other channels (WhatsApp), which run as
   // separate processes on this machine and reach the link through here.
+  // Carter's status page: what is set up and working, in plain words.
+  if (req.method === 'GET' && req.url === '/status') {
+    const rows = []
+    const row = (ok, name, detail) => rows.push({ ok, name, detail })
+
+    row(true, 'Brain', `Claude ${MODEL}, effort ${EFFORT}`)
+    const signIn = process.env.CLAUDE_CODE_OAUTH_TOKEN
+      ? 'Claude subscription token'
+      : process.env.ANTHROPIC_API_KEY
+        ? 'Claude API key'
+        : 'Claude Code login on this computer'
+    row(true, 'Signed in with', signIn)
+
+    const key = elevenKey()
+    if (!key) row(null, 'ElevenLabs voice', 'No key — using the device\'s own voice')
+    else {
+      try {
+        const r = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
+          headers: { 'xi-api-key': key },
+          signal: AbortSignal.timeout(8000),
+        })
+        if (r.ok) {
+          const s = await r.json()
+          const left = (s.character_limit ?? 0) - (s.character_count ?? 0)
+          row(true, 'ElevenLabs voice', `Key works · plan ${s.tier ?? '?'} · ${left} characters left · voice ${VOICE_ID}`)
+        } else {
+          row(false, 'ElevenLabs voice', `Key refused (${r.status}) — make an unrestricted key and update ELEVENLABS_API_KEY`)
+        }
+      } catch (err) {
+        row(false, 'ElevenLabs voice', `Could not check: ${err.message}`)
+      }
+    }
+
+    const home = process.env.CARTER_HOME || join(homedir(), '.carter')
+    let linked = false
+    try {
+      await stat(join(home, 'whatsapp-auth', 'creds.json'))
+      linked = true
+    } catch {
+      /* not linked */
+    }
+    row(linked, 'WhatsApp', linked ? 'Linked' : 'Not linked — open /whatsapp-qr?key=… and scan it with WhatsApp')
+
+    const calls = []
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.CARTER_PHONE) calls.push(`Twilio → ${process.env.CARTER_PHONE}`)
+    if (process.env.CARTER_TELEGRAM_USER) calls.push('Telegram call')
+    if (process.env.CARTER_NTFY_TOPIC) calls.push('ntfy alarm')
+    row(calls.length > 0, 'Reminder calls', calls.length ? calls.join(', ') : 'Off — add TWILIO_* and CARTER_PHONE')
+
+    row(laptopOnline(), 'Laptop link', laptopOnline() ? 'Connected — Carter can work on your laptop' : 'Not connected — run "Link Laptop to Carter (full control)" on the laptop')
+
+    if (!lastServers) {
+      row(null, 'Gmail / Calendar', 'Unknown until you have talked to Carter once — ask something, then refresh')
+    } else {
+      const all = lastServers.all
+      const find = (re) => all.find((s) => re.test(s.name))
+      for (const [label, re] of [['Gmail', /gmail/i], ['Google Calendar', /calendar/i]]) {
+        const s = find(re)
+        row(
+          s ? s.status !== 'failed' && s.status !== 'needs-auth' : laptopOnline() ? null : false,
+          label,
+          s
+            ? `${s.name}: ${s.status}${s.status === 'needs-auth' ? ' — reconnect it in claude.ai → Settings → Connectors' : ''}`
+            : laptopOnline()
+              ? 'Not available here — Carter will use your laptop for it'
+              : 'Not connected — connect it in claude.ai → Settings → Connectors, then restart Carter',
+        )
+      }
+      row(true, 'All connections', all.map((s) => `${s.name} (${s.status})`).join(', ') || 'none')
+    }
+    row(ALLOW_WRITES, 'Actions', ALLOW_WRITES ? 'Full control — Carter can send and change things' : 'Read-only — Carter can look but not send or change (set CARTER_ALLOW_WRITES=1 to allow)')
+
+    const icon = (ok) => (ok === true ? '✅' : ok === false ? '❌' : '🟡')
+    const esc = (t) => String(t).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c])
+    const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Carter status</title><style>body{font:16px system-ui,sans-serif;background:#07060a;color:#f5ecd7;margin:0;padding:20px}
+h1{color:#d4af37;letter-spacing:.3em;font-size:20px}table{border-collapse:collapse;width:100%;max-width:820px}
+td{padding:10px 8px;border-bottom:1px solid #2a2418;vertical-align:top}td.n{font-weight:600;white-space:nowrap}</style>
+<h1>C.A.R.T.E.R. · STATUS</h1><table>${rows.map((r) => `<tr><td>${icon(r.ok)}</td><td class="n">${esc(r.name)}</td><td>${esc(r.detail)}</td></tr>`).join('')}</table>
+<p style="opacity:.6">Checked ${new Date().toUTCString()}</p>`
+    res.writeHead(200, { ...cors, 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' })
+    return res.end(html)
+  }
+
   if (req.method === 'GET' && req.url === '/laptop-status') {
     res.writeHead(200, { ...cors, 'content-type': 'application/json' })
     return res.end(JSON.stringify({ online: laptopOnline() }))
@@ -1449,6 +1541,7 @@ wss.on('connection', (socket, req) => {
               const usable = (msg.mcp_servers ?? [])
                 .filter((s) => s.status !== 'needs-auth' && s.status !== 'failed')
                 .map((s) => s.name)
+              lastServers = { at: new Date().toISOString(), all: msg.mcp_servers ?? [] }
               send({ type: 'ready', servers: usable })
               console.log(`[carter] ${usable.length} MCP servers available`)
             }

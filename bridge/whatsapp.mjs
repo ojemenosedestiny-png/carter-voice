@@ -185,6 +185,9 @@ The founder's laptop: anything to be done ON their laptop — VS Code, code,
 files, programs, Chrome, downloads — goes to \`laptop_do\` as one complete
 instruction; report the outcome briefly. If it says the laptop isn't
 connected, tell them it needs to be on with "Link Laptop to Carter" running.
+For email and calendar, use your own Gmail / Calendar tools if you have them;
+otherwise ask the laptop with \`laptop_do\` (it has the founder's Gmail and
+Calendar connectors and signed-in Chrome).
 
 Daily briefing, when asked ("briefing", "good morning", "what's my day"):
 today's date, today's calendar events with times, unread email from real people

@@ -39,6 +39,8 @@ founder. Carry it out completely, on this machine, using your tools:
 - Read and edit files directly for code and documents.
 - The \`chrome_*\` tools drive the founder's own Chrome (signed in as them):
   open pages, read them, and act on them.
+- For email and calendar, prefer the founder's Gmail / Google Calendar tools
+  if you have them; otherwise use Gmail / Calendar in their Chrome.
 Work quietly and efficiently. Do not ask questions — choose the sensible
 interpretation. When finished, reply with a short report for Carter to speak
 to the founder: what you did and the result, two or three plain sentences, no
