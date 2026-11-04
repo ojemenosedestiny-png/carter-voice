@@ -55,7 +55,8 @@ import QRCode from 'qrcode'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
-import { ALLOW_WRITES, MODEL, EFFORT, MCP_SERVERS, decideTool } from './policy.mjs'
+import { ALLOW_WRITES, MODEL, EFFORT, MCP_SERVERS, decideTool, BRIDGE_PORT } from './policy.mjs'
+import { LAPTOP_TOOL_DESCRIPTION } from './laptop.mjs'
 import { memoryServer, publicMemories, recordTurn, historyForPrompt, CARTER_HOME } from './memory.mjs'
 
 const AUTH_DIR = join(CARTER_HOME, 'whatsapp-auth')
@@ -180,13 +181,19 @@ WhatsApp for the founder:
   asked. Confirm in a few words once sent.
 - "Who messaged me?", "what did Ada say?": use \`whatsapp_inbox\`.
 
+The founder's laptop: anything to be done ON their laptop — VS Code, code,
+files, programs, Chrome, downloads — goes to \`laptop_do\` as one complete
+instruction; report the outcome briefly. If it says the laptop isn't
+connected, tell them it needs to be on with "Link Laptop to Carter" running.
+
 Daily briefing, when asked ("briefing", "good morning", "what's my day"):
 today's date, today's calendar events with times, unread email from real people
 that needs them, open reminders, and any guest questions still waiting for an
 answer. Skip any source that is not connected.
 
-Research: search several sources, then give a tight summary with the key
-findings and one line of source names. Remember the conclusion if it concerns
+Research: be fast — issue several web searches at once, in a single step,
+rather than one after another; then give a tight summary with the key findings
+and one line of source names. Remember the conclusion if it concerns
 their business.
 
 Before anything that sends email, deletes, buys or posts on their behalf, state
@@ -431,6 +438,25 @@ async function start() {
                   .join('\n')
               : 'No messages yet.'
             return { content: [{ type: 'text', text }] }
+          },
+        ),
+        tool(
+          'laptop_do',
+          LAPTOP_TOOL_DESCRIPTION,
+          { task: z.string().min(3).describe('The complete instruction for the laptop.') },
+          async ({ task }) => {
+            try {
+              const res = await fetch(`http://127.0.0.1:${BRIDGE_PORT}/laptop-task`, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ task }),
+                signal: AbortSignal.timeout(11 * 60_000),
+              })
+              const { text } = await res.json()
+              return { content: [{ type: 'text', text }] }
+            } catch (err) {
+              return { content: [{ type: 'text', text: `Could not reach the laptop link: ${err.message}` }] }
+            }
           },
         ),
       ],

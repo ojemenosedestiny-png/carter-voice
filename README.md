@@ -165,6 +165,27 @@ the free plan sleeps after 15 minutes and forgets everything on restart.
 Every `git push` redeploys Carter automatically. Memory, reminders and the
 WhatsApp link are kept on the disk across redeploys.
 
+### Laptop link — Carter does things on your laptop, from your phone
+
+With Carter on Render, link your laptop so that anything you ask from your
+phone (voice or WhatsApp) that needs the laptop is done **on the laptop**: VS
+Code and your code, files and folders, programs, Chrome (signed in as you),
+downloads. The laptop dials out to Carter, so nothing on it is exposed to the
+internet.
+
+1. Once, in PowerShell (your address and real access key):
+   `setx CARTER_CLOUD_URL "https://carter-yxnu.onrender.com"` and
+   `setx CARTER_ACCESS_KEY "your-CARTER_ACCESS_KEY"`, then open a new window.
+2. Double-click **`Link Laptop to Carter (full control).bat`** (or the
+   read-only `Link Laptop to Carter.bat`) and keep that window open.
+3. On your phone: *"Hey Carter, open VS Code on my laptop in the carter-voice
+   project"*, *"…find the PDF I downloaded yesterday"*, *"…open my Gmail in
+   Chrome on the laptop"*.
+
+For Chrome control, install the **Claude in Chrome** extension in your Chrome.
+To link at every login, put a shortcut to the .bat file in `shell:startup`.
+The laptop must be on and awake. (An iPhone can't be controlled by any app.)
+
 ### Carter always ready — laptop and iPhone
 
 Add `?autostart` to Carter's address and it powers on and starts listening by

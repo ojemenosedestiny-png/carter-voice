@@ -25,6 +25,7 @@ import { uiServer } from './ui.mjs'
 import { chromeAvailable, chromeServer } from './chrome.mjs'
 import { visionServer } from './vision.mjs'
 import { memoryServer, recordTurn, recentTurns, historyForPrompt } from './memory.mjs'
+import { attachLaptop, laptopServer, runOnLaptop, laptopOnline } from './laptop.mjs'
 import { homedir, tmpdir } from 'node:os'
 import { readFileSync, realpathSync } from 'node:fs'
 import { readFile, realpath, stat } from 'node:fs/promises'
@@ -246,6 +247,14 @@ Your eyes:
 - Describe a watch as a sequence — what changed between the frames — not as a
   list of pictures. They know what their own hands look like.
 
+The founder's laptop — the \`carter_laptop\` tools:
+- Anything to be done ON their laptop or computer — VS Code, code projects,
+  files and folders, programs, Chrome (signed in as them), downloads, settings —
+  goes to \`laptop_do\` as one complete, specific instruction. The laptop does
+  it and reports back; tell the founder the outcome in a sentence or two.
+- If the laptop is not connected, say so once: it needs to be switched on with
+  "Link Laptop to Carter" running.
+
 Your memory — the \`carter_memory\` tools:
 - Everything the founder tells you to keep goes in memory with \`remember\`:
   "remember", "note that", "remind me", decisions, contacts, ideas, and facts
@@ -273,7 +282,9 @@ Put the detail on a blade and speak at most four sentences. If a source is
 not connected, skip it silently — never apologise for a missing tool.
 
 Research — when they ask you to research or look into something:
-- Use web search and fetch several sources; do not stop at the first result.
+- Be fast: issue several web searches AT ONCE, in a single step (different
+  angles of the question in parallel), rather than one after another. Fetch a
+  page only when the search results are not enough.
 - Show the full report on a blade: a short summary, the key findings, and the
   sources as short tags. Speak only the headline and one supporting fact.
 - If it is about their business, \`remember\` the conclusion as a fact.
@@ -650,6 +661,33 @@ const handleRequest = async (req, res) => {
     }
   }
 
+  // The laptop link for Carter's other channels (WhatsApp), which run as
+  // separate processes on this machine and reach the link through here.
+  if (req.method === 'GET' && req.url === '/laptop-status') {
+    res.writeHead(200, { ...cors, 'content-type': 'application/json' })
+    return res.end(JSON.stringify({ online: laptopOnline() }))
+  }
+  if (req.method === 'POST' && req.url === '/laptop-task') {
+    let body = ''
+    for await (const chunk of req) {
+      body += chunk
+      if (body.length > 32 * 1024) break
+    }
+    let task = ''
+    try {
+      task = String(JSON.parse(body || '{}').task ?? '')
+    } catch {
+      /* empty */
+    }
+    if (!task) {
+      res.writeHead(400, cors)
+      return res.end('no task')
+    }
+    const text = await runOnLaptop(task)
+    res.writeHead(200, { ...cors, 'content-type': 'application/json' })
+    return res.end(JSON.stringify({ text }))
+  }
+
   if (req.method === 'GET' && req.url === '/health') {
     // The browser reads this once at boot to decide which voice engine to use.
     // Both premium paths ride the same ElevenLabs key, so both flags track it:
@@ -993,7 +1031,7 @@ const wss = new WebSocketServer({
       return done(false, 401, 'Unauthorised')
     }
     const path = (req.url ?? '/').split('?')[0]
-    if (path !== '/' && path !== '/ws') {
+    if (path !== '/' && path !== '/ws' && path !== '/laptop') {
       console.warn(`[carter] rejected websocket on path ${path}`)
       return done(false, 403, 'Forbidden')
     }
@@ -1062,7 +1100,13 @@ const RESULT_FAILURES = {
   default: 'The turn ended without an answer.',
 }
 
-wss.on('connection', (socket) => {
+wss.on('connection', (socket, req) => {
+  // The founder's laptop dialling in to take tasks — not a screen.
+  if ((req?.url ?? '').split('?')[0] === '/laptop') {
+    attachLaptop(socket)
+    return
+  }
+
   console.log('[carter] client connected')
 
   // Answer the HUD straight away rather than making it wait for the agent's
@@ -1241,6 +1285,8 @@ wss.on('connection', (socket) => {
         carter_eyes: visionServer(ask),
         // Carter's long-term memory, a JSON file on this machine.
         carter_memory: memoryServer(),
+        // The founder's laptop, when it is linked (npm run laptop there).
+        carter_laptop: laptopServer(),
       },
       // A plain system prompt, not the claude_code preset. The preset is
       // tuned for a coding agent — verbose, file-oriented, and a large chunk

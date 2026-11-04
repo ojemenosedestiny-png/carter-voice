@@ -193,6 +193,10 @@ export function decideTool(name) {
     // outside it, so remembering and forgetting are always allowed.
     if (server === 'carter_memory') return true
 
+    // Handing a task to the founder's laptop. What the laptop may actually do
+    // is decided on the laptop, by how its link was started.
+    if (server === 'carter_laptop') return true
+
     // The browser server gates itself, at construction: chromeServer() only
     // builds the acting tools — click, type, form input, close tab — when
     // ALLOW_WRITES is set, so anything that reaches here at all is something
@@ -217,3 +221,8 @@ export function decideTool(name) {
   }
   return ALLOW_WRITES
 }
+
+/** The port the brain listens on — the same rule server.mjs uses. */
+export const BRIDGE_PORT = Number(
+  process.env.JARVIS_BRIDGE_PORT ?? (process.env.CARTER_CLOUD ? process.env.PORT : undefined) ?? 8788,
+)
