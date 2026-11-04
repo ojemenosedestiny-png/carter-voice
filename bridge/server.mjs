@@ -733,17 +733,31 @@ const handleRequest = async (req, res) => {
         return res.end(why)
       }
 
-      // Pipe it through rather than buffering. Waiting for the whole file here
-      // would throw away everything the streaming endpoint just bought us.
+      // Received in full before anything is sent. Streaming it through meant a
+      // break halfway (a dropped connection, credit running out) could not be
+      // reported once the first bytes had gone, so the page got a clip cut off
+      // after a word and played the rest in the computer's own voice.
+      const audio = Buffer.from(await upstream.arrayBuffer())
+      // Real speech at this bitrate is ~250 bytes per character; under a
+      // quarter of that means the clip was cut off.
+      if (audio.length < text.length * 60) {
+        console.warn(
+          `[carter] ElevenLabs returned only ${audio.length} bytes for "${text.slice(0, 60)}" — ` +
+            'the voice may be out of credit. Using the computer\'s voice instead.',
+        )
+        res.writeHead(502, cors)
+        return res.end('audio too short')
+      }
       res.writeHead(200, {
         ...cors,
         'content-type': 'audio/mpeg',
+        'content-length': audio.length,
         'cache-control': 'no-cache',
       })
-      for await (const chunk of upstream.body) res.write(Buffer.from(chunk))
-      return res.end()
+      return res.end(audio)
     } catch (err) {
-      res.writeHead(502, cors)
+      console.warn(`[carter] ElevenLabs voice error — using the computer's voice instead: ${err?.message ?? err}`)
+      if (!res.headersSent) res.writeHead(502, cors)
       return res.end(String(err?.message ?? err))
     }
   }
