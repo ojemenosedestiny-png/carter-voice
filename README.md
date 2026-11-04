@@ -107,16 +107,16 @@ Every `git push` to GitHub redeploys the site automatically.
 
 ### Carter on your phone (anywhere)
 
-The interface is your Vercel site; the brain stays on your PC and is reached
-through a secure Cloudflare tunnel. Every request from outside your PC must
-carry your secret access key (kept in `C:\Users\<you>\.carter\access-key`),
+Your PC serves Carter's screen **and** brain to your phone through a secure
+Cloudflare tunnel — no Vercel needed. Everything except the screen itself
+requires your secret access key (kept in `C:\Users\<you>\.carter\access-key`),
 so the link only works for you.
 
-One-time setup:
-1. Deploy the interface on Vercel (section above) and run
-   `setx CARTER_WEB_URL "https://your-carter.vercel.app"`.
-2. Install Cloudflare's tunnel tool: `winget install --id Cloudflare.cloudflared`
-3. Open a **new** PowerShell window.
+One-time setup: install Cloudflare's tunnel tool, then open a **new** PowerShell:
+
+```powershell
+winget install --id Cloudflare.cloudflared
+```
 
 Every time:
 1. Double-click **`Start Carter (phone).bat`** (or **`Start Carter (phone + full control).bat`**
@@ -129,7 +129,8 @@ Every time:
 The free tunnel's address changes every time Carter starts, so scan the new QR
 code after each restart. The QR link contains your key — don't share it. To
 change the key, delete the `access-key` file and restart. Your PC must stay on
-with Carter running.
+with Carter running. (To use your Vercel site for the screen instead, run
+`npm run start:phone -- --vercel` with `CARTER_WEB_URL` set.)
 
 ### Speed
 

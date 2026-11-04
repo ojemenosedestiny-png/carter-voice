@@ -10,7 +10,7 @@
  * browser, send things): `npm start -- --writes`.
  */
 
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import process from 'node:process'
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { randomBytes } from 'node:crypto'
@@ -152,14 +152,18 @@ console.log('\nC.A.R.T.E.R. starting — the brain and the face.\n')
 run('bridge', 'node', ['bridge/server.mjs'], '36', bridgeEnv)
 
 if (phone) {
-  const web = (process.env.CARTER_WEB_URL || '').replace(/\/+$/, '')
-  if (!web) {
-    console.log(
-      '\n  Phone mode needs your Vercel address first:\n' +
-        '    setx CARTER_WEB_URL "https://your-carter.vercel.app"\n' +
-        '  then open a new PowerShell window and start again.\n',
-    )
-  } else {
+  // The phone loads Carter's screen straight from this PC through the tunnel,
+  // so it needs an up-to-date build of it (a few seconds). Add --vercel to use
+  // the Vercel site (CARTER_WEB_URL) for the screen instead.
+  const useVercel = process.argv.includes('--vercel') && process.env.CARTER_WEB_URL
+  if (!useVercel) {
+    console.log('  preparing Carter\'s screen for your phone…')
+    const built = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build', '--logLevel', 'error'], {
+      stdio: 'inherit',
+    })
+    if (built.status !== 0) console.log('  could not build the screen — the phone link may not load.')
+  }
+  {
     const tunnel = spawn(
       'cloudflared',
       ['tunnel', '--url', `http://localhost:8788`, '--no-autoupdate'],
@@ -171,8 +175,9 @@ if (phone) {
       const m = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(d.toString())
       if (!m || shown) return
       shown = true
-      const bridge = m[0].replace(/^https/, 'wss')
-      const link = `${web}/#bridge=${encodeURIComponent(bridge)}&key=${encodeURIComponent(accessKey)}`
+      const link = useVercel
+        ? `${process.env.CARTER_WEB_URL.replace(/\/+$/, '')}/#bridge=${encodeURIComponent(m[0].replace(/^https/, 'wss'))}&key=${encodeURIComponent(accessKey)}`
+        : `${m[0]}/#bridge=self&key=${encodeURIComponent(accessKey)}`
       const png = join(carterHome, 'phone-link.png')
       try {
         await QRCode.toFile(png, link, { width: 520, margin: 2 })

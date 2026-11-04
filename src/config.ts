@@ -107,6 +107,11 @@ function remote(): { bridge?: string; key?: string } {
   }
   if (hash.get('bridge')) {
     bridge = hash.get('bridge')!
+    // "self": this page was served by Carter's brain itself (phone mode), so
+    // the brain is at this very address.
+    if (bridge === 'self') {
+      bridge = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`
+    }
     store.set('carter.bridge', bridge)
   }
   if (hash.get('key')) {

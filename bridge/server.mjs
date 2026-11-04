@@ -18,6 +18,7 @@
 import './env.mjs'
 import { WebSocketServer } from 'ws'
 import { timingSafeEqual } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import { displayServer } from './panels.mjs'
 import { uiServer } from './ui.mjs'
@@ -553,14 +554,67 @@ function authorised(req) {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+// ---------------------------------------------------------------------------
+// Carter's own screen, served by the brain (phone mode, no Vercel needed).
+// The built interface in dist/ is public code — the same as on GitHub — so it
+// is served without the key; everything that does anything still needs it.
+// ---------------------------------------------------------------------------
+const DIST = fileURLToPath(new URL('../dist', import.meta.url))
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript',
+  '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
+  '.ico': 'image/x-icon', '.json': 'application/json', '.mp3': 'audio/mpeg',
+  '.wasm': 'application/wasm', '.woff2': 'font/woff2', '.txt': 'text/plain',
+}
+
+/** The dist/ file this GET asks for, or null if it is not one. */
+async function staticFile(req) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return null
+  let path
+  try {
+    path = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname)
+  } catch {
+    return null
+  }
+  const file = resolvePath(DIST, '.' + (path === '/' ? '/index.html' : path))
+  const rel = relative(DIST, file)
+  if (rel.startsWith('..') || isAbsolute(rel)) return null
+  try {
+    const st = await stat(file)
+    return st.isFile() ? file : null
+  } catch {
+    return null
+  }
+}
+
+/** A page that Carter's brain served itself (phone mode, or localhost:8788). */
+const sameSite = (origin, req) => {
+  try {
+    return Boolean(req.headers.host) && new URL(origin).host === req.headers.host
+  } catch {
+    return false
+  }
+}
+
 const handleRequest = async (req, res) => {
+  const file = await staticFile(req)
+  if (file) {
+    const ext = file.slice(file.lastIndexOf('.')).toLowerCase()
+    res.writeHead(200, {
+      'content-type': TYPES[ext] ?? 'application/octet-stream',
+      'cache-control': ext === '.html' ? 'no-cache' : 'public, max-age=3600',
+    })
+    if (req.method === 'HEAD') return res.end()
+    return res.end(await readFile(file))
+  }
   if (!authorised(req)) {
     console.warn(`[carter] refused a remote request without the right access key`)
     res.writeHead(401, { vary: 'origin' })
     return res.end('unauthorised')
   }
   const origin = req.headers.origin
-  if (origin && !originAllowed(origin)) {
+  // A page served by this brain itself is fine; remote ones have shown the key.
+  if (origin && !originAllowed(origin) && !sameSite(origin, req)) {
     console.warn(`[carter] refused http request from origin ${origin}`)
     res.writeHead(403, { vary: 'origin' })
     return res.end('forbidden')
@@ -919,7 +973,7 @@ const wss = new WebSocketServer({
       console.warn(`[carter] rejected websocket on path ${path}`)
       return done(false, 403, 'Forbidden')
     }
-    if (!originAllowed(origin)) {
+    if (!originAllowed(origin) && !sameSite(origin, req)) {
       console.warn(
         `[carter] rejected websocket from origin ${origin ?? '(none)'}` +
           ' — set JARVIS_ALLOWED_ORIGINS to permit it',
