@@ -165,11 +165,18 @@ the free plan sleeps after 15 minutes and forgets everything on restart.
 Every `git push` redeploys Carter automatically. Memory, reminders and the
 WhatsApp link are kept on the disk across redeploys.
 
-### Speed
+### Intelligence and speed
 
-Carter defaults to the fast settings (`sonnet`, effort `low`): a spoken
-"how are you?" is answered in about three seconds. For deeper, slower answers:
-`setx CARTER_MODEL "opus"` and `setx CARTER_EFFORT "high"`.
+Carter runs on Claude **Opus** (the most capable model) at low effort: simple
+questions in a few seconds, thoughtful answers in ten to twenty. For quicker
+but lighter answers set `CARTER_MODEL` = `sonnet`; for even deeper thinking set
+`CARTER_EFFORT` = `medium` or `high` (slower). On Render, add these under
+**Environment**; on your PC use `setx`.
+
+Carter keeps your conversation (voice and WhatsApp together) in
+`conversation.json` next to its memory, shows the last few exchanges when you
+open it, and uses recent history as context — so it remembers what you talked
+about last time.
 
 ### Full control mode
 
@@ -329,7 +336,7 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | Variable | What it does | Default |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Carter's brain (your Claude API key) | uses Claude Code login if unset |
-| `CARTER_MODEL` | Claude model (`sonnet` fast, `opus` deepest) | `sonnet` |
+| `CARTER_MODEL` | Claude model (`opus` smartest, `sonnet` faster) | `opus` |
 | `CARTER_EFFORT` | `low` / `medium` / `high` thinking | `low` |
 | `ELEVENLABS_API_KEY` | Premium voice and transcription | browser voice |
 | `CARTER_VOICE_ID` | ElevenLabs voice id | `CwhRBWXzGAHq8TQ4Fs17` (Roger) |

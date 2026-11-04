@@ -56,7 +56,7 @@ import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { ALLOW_WRITES, MODEL, EFFORT, MCP_SERVERS, decideTool } from './policy.mjs'
-import { memoryServer, publicMemories, CARTER_HOME } from './memory.mjs'
+import { memoryServer, publicMemories, recordTurn, historyForPrompt, CARTER_HOME } from './memory.mjs'
 
 const AUTH_DIR = join(CARTER_HOME, 'whatsapp-auth')
 const QR_FILE = join(CARTER_HOME, 'whatsapp-qr.png')
@@ -471,7 +471,7 @@ async function start() {
       cwd: homedir(),
       settingSources: [],
       permissionMode: 'default',
-      systemPrompt: `${FOUNDER_PROMPT}\n\nRight now it is ${new Date().toString()}.`,
+      systemPrompt: `${FOUNDER_PROMPT}\n\nRight now it is ${new Date().toString()}.${historyForPrompt()}`,
       mcpServers: {
         ...MCP_SERVERS,
         carter_memory: memoryServer(),
@@ -563,7 +563,9 @@ async function start() {
           const g = guestsCommand(text)
           if (g) return send(jid, g)
           try {
+            recordTurn('founder', text, 'whatsapp')
             const answer = await askFounderCarter(jid, text)
+            if (answer) recordTurn('carter', answer, 'whatsapp')
             await send(jid, answer || 'I could not finish that one. Try again, or send /new.')
           } catch (err) {
             console.error('[carter:whatsapp] error:', err)

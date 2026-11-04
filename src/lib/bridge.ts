@@ -1,5 +1,5 @@
 import type { AskHandlers } from './anthropic'
-import type { Blade, Panel } from '../store'
+import { useStore, type Blade, type Panel } from '../store'
 import { BRIDGE_WS_URL, withKey } from '../config'
 
 /**
@@ -35,6 +35,7 @@ type Frame = {
   seconds?: number
   when?: string
   servers?: Array<string | { name?: string }>
+  turns?: Array<{ role?: string; text?: string }>
 }
 
 /** Every question gets an id so its answer can be told from anyone else's. */
@@ -177,6 +178,20 @@ function dispatch(ws: WebSocket) {
         .filter(Boolean)
       onServers?.(servers)
       firstReady.resolve()
+    } else if (msg.type === 'history' && Array.isArray(msg.turns)) {
+      // Where the founder left off — shown only on a fresh screen, so a
+      // reconnect mid-conversation never duplicates what is already there.
+      const store = useStore.getState()
+      if (store.turns.length === 0) {
+        msg.turns.forEach((t, i) => {
+          if (!t?.text) return
+          store.pushTurn({
+            id: `history-${i}`,
+            role: t.role === 'founder' ? 'user' : 'jarvis',
+            text: t.text,
+          })
+        })
+      }
     } else if (msg.type === 'panel' && msg.panel) {
       onPanel?.(msg.panel)
     } else if (msg.type === 'blade' && msg.blade) {

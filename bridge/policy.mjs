@@ -23,9 +23,10 @@ export const ALLOW_WRITES = process.env.JARVIS_ALLOW_WRITES === '1'
  * The orchestrator model. Override with JARVIS_MODEL to trade quality for pace
  * — claude-sonnet-5 is noticeably snappier on camera if Opus feels slow.
  */
-// Carter defaults to speed: Sonnet answers a spoken question in a fraction of
-// Opus's time. Set CARTER_MODEL="opus" (and CARTER_EFFORT="high") for depth.
-export const MODEL = process.env.JARVIS_MODEL || 'sonnet'
+// Carter's default is the most capable model, Opus, at low effort — the most
+// intelligent answers at a conversational pace. CARTER_MODEL="sonnet" is
+// quicker still; CARTER_EFFORT="medium" or "high" thinks harder (slower).
+export const MODEL = process.env.JARVIS_MODEL || 'opus'
 
 /**
  * How hard the model thinks before answering.

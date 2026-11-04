@@ -210,3 +210,55 @@ export function memoryServer() {
     ],
   })
 }
+
+// ---------------------------------------------------------------------------
+// Conversation history — what the founder and Carter said, across visits and
+// across channels (voice and WhatsApp), kept next to the memory file.
+// ---------------------------------------------------------------------------
+const HISTORY = join(CARTER_HOME, 'conversation.json')
+const HISTORY_KEEP = 200
+
+function loadHistory() {
+  try {
+    const data = JSON.parse(readFileSync(HISTORY, 'utf8'))
+    return Array.isArray(data.turns) ? data.turns : []
+  } catch {
+    return []
+  }
+}
+
+/** Save one line of conversation. role: 'founder' | 'carter'. */
+export function recordTurn(role, text, channel = 'voice') {
+  const clean = String(text ?? '').trim()
+  if (!clean) return
+  const turns = loadHistory()
+  turns.push({ role, text: clean.slice(0, 4000), channel, at: new Date().toISOString() })
+  try {
+    mkdirSync(CARTER_HOME, { recursive: true })
+    const tmp = `${HISTORY}.tmp`
+    writeFileSync(tmp, JSON.stringify({ turns: turns.slice(-HISTORY_KEEP) }, null, 2))
+    renameSync(tmp, HISTORY)
+  } catch (err) {
+    console.warn('[carter] could not save the conversation:', err.message)
+  }
+}
+
+/** The most recent lines of conversation, oldest first. */
+export function recentTurns(n = 12) {
+  return loadHistory().slice(-n)
+}
+
+/** Recent conversation as context for the model's system prompt. */
+export function historyForPrompt(n = 16) {
+  const turns = recentTurns(n)
+  if (!turns.length) return ''
+  const lines = turns.map(
+    (t) =>
+      `[${t.at.slice(0, 16).replace('T', ' ')} via ${t.channel}] ${t.role === 'founder' ? 'Founder' : 'Carter'}: ${t.text.replace(/\s+/g, ' ').slice(0, 600)}`,
+  )
+  return (
+    '\n\nRECENT CONVERSATION with the founder (earlier visits and WhatsApp), oldest ' +
+    'first. Use it for context and continuity; do not repeat it back unless asked.\n' +
+    lines.join('\n')
+  )
+}

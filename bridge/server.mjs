@@ -24,7 +24,7 @@ import { displayServer } from './panels.mjs'
 import { uiServer } from './ui.mjs'
 import { chromeAvailable, chromeServer } from './chrome.mjs'
 import { visionServer } from './vision.mjs'
-import { memoryServer } from './memory.mjs'
+import { memoryServer, recordTurn, recentTurns, historyForPrompt } from './memory.mjs'
 import { homedir, tmpdir } from 'node:os'
 import { readFileSync, realpathSync } from 'node:fs'
 import { readFile, realpath, stat } from 'node:fs/promises'
@@ -107,10 +107,15 @@ const SYSTEM_PROMPT = `You are CARTER, a private assistant built for and owned b
 founder. You are speaking out loud to them. Your name is Carter — never JARVIS
 or anything else. If asked who you are, you are Carter, the founder's assistant.
 
-LENGTH. Two sentences is the ceiling in conversation; the median is under twelve
-words. Every word is read aloud and the user waits in silence while it plays, so
-a long answer is a failure however good it is. Length is licensed in exactly one
-case: reading out data they asked you to retrieve. Conversation never licenses it.
+INTELLIGENCE AND LENGTH. You are as thoughtful and articulate as the best
+assistant the founder has ever spoken to: you reason, notice what matters, and
+give real substance — the answer, the why, and the next step worth taking. Speak
+in natural, well-formed sentences. Small talk and simple questions get one to
+three sentences. When they ask you to explain, advise, plan, compare, teach or
+think something through, give a complete, well-organised spoken answer — up to
+about eight sentences — and put anything longer (lists, tables, the full
+report) on a blade. Never pad and never ramble: every word is read aloud, so
+each sentence must earn its place.
 
 URGENCY IS SIGNALLED BY DELETING WORDS, NOT ADDING THEM. As a situation worsens
 your lines get shorter, not louder. A full clause becomes a clause, becomes a
@@ -1065,6 +1070,8 @@ wss.on('connection', (socket) => {
   socket.send(
     JSON.stringify({ type: 'ready', servers: Object.keys(MCP_SERVERS) }),
   )
+  // The last few exchanges, so the screen opens where the founder left off.
+  socket.send(JSON.stringify({ type: 'history', turns: recentTurns(8) }))
 
   /** Resolves the pending user message into the SDK's input generator. */
   let deliver = null
@@ -1239,7 +1246,7 @@ wss.on('connection', (socket) => {
       // tuned for a coding agent — verbose, file-oriented, and a large chunk
       // of input tokens on every turn. Replacing it makes the persona stick,
       // keeps answers short enough to speak, and cuts cost per turn.
-      systemPrompt: `${SYSTEM_PROMPT}\n\nRight now it is ${new Date().toString()}.`,
+      systemPrompt: `${SYSTEM_PROMPT}\n\nRight now it is ${new Date().toString()}.${historyForPrompt()}`,
       // Run from the home directory so project-scoped MCP servers don't shadow
       // the global ones, and so file tools have a sane root.
       cwd: homedir(),
@@ -1363,6 +1370,7 @@ wss.on('connection', (socket) => {
             // nothing to say — the HUD stops spinning and JARVIS stands there
             // silent. Say what happened instead.
             if (msg.subtype === 'success') {
+              recordTurn('carter', msg.result ?? '', 'voice')
               sendTurn({
                 type: 'done',
                 text: msg.result ?? '',
@@ -1438,6 +1446,7 @@ wss.on('connection', (socket) => {
        * already-resolved promise — and removes the cross-talk when there is.
        */
       const text = msg.text
+      recordTurn('founder', text, 'voice')
       const id = typeof msg.id === 'string' ? msg.id : null
       void settling.then(() => {
         answering = id
