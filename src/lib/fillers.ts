@@ -19,7 +19,7 @@
 
 /** Said as soon as the first tool fires, before any answer exists. */
 const WORKING = [
-  'Working on it, sir.',
+  'Working on it, founder.',
   'Compiling.',
   'Retrieving.',
   'Accessing the archive.',
@@ -31,21 +31,21 @@ const WORKING = [
 
 /** Acknowledging an order where no tool is involved. */
 const ACKNOWLEDGE = [
-  'As you wish, sir.',
-  'Very good, sir.',
+  'As you wish, founder.',
+  'Very good, founder.',
   'Certainly.',
   'Understood.',
   'Consider it done.',
-  'Directly, sir.',
+  'Right away.',
 ]
 
 /** Answering to his name, before the user has said what they want. */
 const ATTENTION = [
-  'Yes, sir?',
-  'Sir?',
-  'At your service, sir.',
+  'Yes, founder?',
+  'Carter here.',
+  'At your service, founder.',
   'Standing by.',
-  'Awake, sir.',
+  'Carter is listening.',
 ]
 
 /**
@@ -129,7 +129,7 @@ const BY_TOOL: Rule[] = [
   {
     server: /elevenlabs|openai-tts/,
     tool: /speech|\bvoice\b|\btts\b|text_to_sound/,
-    lines: ['Synthesising.', 'Working on it, sir.'],
+    lines: ['Synthesising.', 'Working on it, founder.'],
   },
   {
     server: /spotify|sonos/,
@@ -139,7 +139,7 @@ const BY_TOOL: Rule[] = [
   {
     server: /^home|homeassistant|\bhue\b|\bhass\b/,
     tool: /\blights?\b|thermostat|\bdimmer\b/,
-    lines: ['Adjusting it now.', 'Seeing to it, sir.'],
+    lines: ['Adjusting it now.', 'Seeing to it, founder.'],
   },
   {
     server: /github|linear|jira|sentry/,

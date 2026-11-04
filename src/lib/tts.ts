@@ -323,7 +323,7 @@ function shape(text: string): string {
       // The vocative wants its comma — that small beat before "sir" does most
       // of the characterisation. Anchored to a following pause or end of line
       // so the honorific is left alone: "Sir Isaac Newton" is not a vocative.
-      .replace(/([^,\s])\s+(sir)(\s*[.,!?;:]|\s*$)/gi, '$1, $2$3')
+      .replace(/([^,\s])\s+(sir|founder)(\s*[.,!?;:]|\s*$)/gi, '$1, $2$3')
       .replace(/\s+/g, ' ')
       .trim()
   )

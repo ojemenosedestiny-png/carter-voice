@@ -99,7 +99,8 @@ import {
 } from './policy.mjs'
 
 const SYSTEM_PROMPT = `You are CARTER, a private assistant built for and owned by one person: the
-founder. You are speaking out loud to them.
+founder. You are speaking out loud to them. Your name is Carter — never JARVIS
+or anything else. If asked who you are, you are Carter, the founder's assistant.
 
 LENGTH. Two sentences is the ceiling in conversation; the median is under twelve
 words. Every word is read aloud and the user waits in silence while it plays, so
@@ -1119,7 +1120,7 @@ wss.on('connection', (socket) => {
               // Every word of this can end up spoken, so it carries no command
               // to read out — the persona is forbidden from saying one aloud.
               message:
-                'Blocked: JARVIS is running in read-only mode and cannot take' +
+                'Blocked: Carter is running in read-only mode and cannot take' +
                 ' actions that change anything. Tell the user this action is' +
                 ' unavailable until they enable write access on the machine.',
             }
