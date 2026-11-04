@@ -263,12 +263,21 @@ function connect(): Promise<WebSocket> {
        * So say both, and put the actual port in front of them, since that is
        * the fact that distinguishes the two cases at a glance.
        */
+      const onThisPc = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+      const brainOnThisPc = /\/\/(localhost|127\.0\.0\.1)[:/]/.test(BRIDGE_WS_URL)
       settle(
         new Error(
-          `Cannot reach the bridge at ${BRIDGE_WS_URL}. Either it is not ` +
-            'running (start it with `npm start`), or this page is on a port it ' +
-            `refuses — it accepts localhost:5173-5199 and 4173-4199, and this ` +
-            `page is on ${location.port || '80'}.`,
+          onThisPc
+            ? 'Cannot reach Carter\'s brain. Start Carter on this PC (double-click ' +
+                '"Start Carter"), then refresh this page.'
+            : brainOnThisPc
+              ? 'Cannot reach Carter\'s brain on this PC. Start Carter here, make sure ' +
+                `CARTER_WEB_URL is set to ${location.origin}, and allow Chrome to ` +
+                'access local devices if it asks. On your phone, open the QR link ' +
+                'from "Start Carter (phone)" instead.'
+              : 'Cannot reach Carter on your PC. Make sure "Start Carter (phone)" is ' +
+                'running there, and scan the newest QR code — the link changes ' +
+                'every time Carter starts.',
         ),
       )
     }
