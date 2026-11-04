@@ -1896,3 +1896,11 @@ kbd {
   transform: scaleX(-1);
   background: #000;
 }
+
+/* Phones: the side rails (SYSTEMS, SIGNAL) sit on top of the conversation on a
+   narrow screen, so they step aside and the answer gets the full width. */
+@media (max-width: 640px) {
+  .rail {
+    display: none;
+  }
+}
