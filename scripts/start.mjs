@@ -192,8 +192,27 @@ if (phone) {
       console.log('  The tunnel address changes each time Carter starts: scan again then.')
       console.log('  ===========================================================\n')
     }
-    tunnel.stdout.on('data', watch)
-    tunnel.stderr.on('data', watch)
+    // Show cloudflared's own problems — otherwise a failed tunnel just looks
+    // like a window that never shows the QR code.
+    const relay = (d) => {
+      for (const line of d.toString().split('\n')) {
+        if (/\bERR\b|error|failed|unable/i.test(line)) console.log(`  tunnel: ${line.trim()}`)
+      }
+    }
+    tunnel.stdout.on('data', (d) => { relay(d); void watch(d) })
+    tunnel.stderr.on('data', (d) => { relay(d); void watch(d) })
+    tunnel.on('exit', (code) => {
+      if (!shown) console.log(`\n  The phone tunnel stopped (code ${code}) before giving an address.\n`)
+    })
+    setTimeout(() => {
+      if (!shown) {
+        console.log(
+          '\n  Still waiting for the phone tunnel after 45 seconds. Check your internet\n' +
+            '  connection, and that cloudflared is installed:  cloudflared --version\n',
+        )
+      }
+    }, 45_000)
+    console.log('  opening a secure tunnel for your phone (this can take up to 30 seconds)…')
     tunnel.on('error', (err) => {
       console.log(
         err.code === 'ENOENT'
