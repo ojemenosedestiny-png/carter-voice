@@ -71,8 +71,70 @@ export const BACKEND: 'bridge' | 'direct' = choice(
  * `wss://` maps to `https://` on its own, which is why this is a prefix swap
  * rather than a hardcoded scheme.
  */
-export const BRIDGE_WS_URL = str(import.meta.env.VITE_BRIDGE_URL) ?? 'ws://localhost:8788'
+/**
+ * Remote use (the founder's phone): the phone link carries where Carter's
+ * brain is and the secret key, as #bridge=wss://…&key=…  They are saved on
+ * this device so the plain address works afterwards, and wiped from the
+ * address bar so the key is not left on screen. Opening the site with
+ * #local resets it to this computer.
+ */
+function remote(): { bridge?: string; key?: string } {
+  if (typeof window === 'undefined') return {}
+  const store = {
+    get: (k: string) => {
+      try {
+        return localStorage.getItem(k) ?? undefined
+      } catch {
+        return undefined
+      }
+    },
+    set: (k: string, v: string | null) => {
+      try {
+        if (v === null) localStorage.removeItem(k)
+        else localStorage.setItem(k, v)
+      } catch {
+        /* storage blocked — the link still works for this visit */
+      }
+    },
+  }
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  let bridge = store.get('carter.bridge')
+  let key = store.get('carter.key')
+  if (hash.has('local')) {
+    store.set('carter.bridge', null)
+    store.set('carter.key', null)
+    bridge = key = undefined
+  }
+  if (hash.get('bridge')) {
+    bridge = hash.get('bridge')!
+    store.set('carter.bridge', bridge)
+  }
+  if (hash.get('key')) {
+    key = hash.get('key')!
+    store.set('carter.key', key)
+  }
+  if (hash.has('bridge') || hash.has('key') || hash.has('local')) {
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+  return { bridge, key }
+}
+const REMOTE = remote()
+// A new phone link (or #local) opened while the page is already showing only
+// changes the address bar's hash; reload so it takes effect.
+if (typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    if (/(^|[#&])(bridge|key|local)\b/.test(window.location.hash)) window.location.reload()
+  })
+}
+
+export const BRIDGE_KEY = REMOTE.key ?? ''
+export const BRIDGE_WS_URL =
+  REMOTE.bridge ?? str(import.meta.env.VITE_BRIDGE_URL) ?? 'ws://localhost:8788'
 export const BRIDGE_HTTP_URL = BRIDGE_WS_URL.replace(/^ws/, 'http')
+
+/** Add the access key to a bridge URL (needed only when used remotely). */
+export const withKey = (url: string) =>
+  BRIDGE_KEY ? `${url}${url.includes('?') ? '&' : '?'}key=${encodeURIComponent(BRIDGE_KEY)}` : url
 
 /**
  * Speech output engine.

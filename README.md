@@ -105,6 +105,38 @@ setx CARTER_WEB_URL "https://carter-voice.vercel.app"
 
 Every `git push` to GitHub redeploys the site automatically.
 
+### Carter on your phone (anywhere)
+
+The interface is your Vercel site; the brain stays on your PC and is reached
+through a secure Cloudflare tunnel. Every request from outside your PC must
+carry your secret access key (kept in `C:\Users\<you>\.carter\access-key`),
+so the link only works for you.
+
+One-time setup:
+1. Deploy the interface on Vercel (section above) and run
+   `setx CARTER_WEB_URL "https://your-carter.vercel.app"`.
+2. Install Cloudflare's tunnel tool: `winget install --id Cloudflare.cloudflared`
+3. Open a **new** PowerShell window.
+
+Every time:
+1. Double-click **`Start Carter (phone).bat`** (or **`Start Carter (phone + full control).bat`**
+   to let Carter act on your PC).
+2. A **QR code** appears in the window (also saved as
+   `C:\Users\<you>\.carter\phone-link.png`). Scan it with your phone camera and
+   open the link in **Chrome**.
+3. Tap **INITIALISE**, allow the microphone, and talk to Carter.
+
+The free tunnel's address changes every time Carter starts, so scan the new QR
+code after each restart. The QR link contains your key — don't share it. To
+change the key, delete the `access-key` file and restart. Your PC must stay on
+with Carter running.
+
+### Speed
+
+Carter defaults to the fast settings (`sonnet`, effort `low`): a spoken
+"how are you?" is answered in about three seconds. For deeper, slower answers:
+`setx CARTER_MODEL "opus"` and `setx CARTER_EFFORT "high"`.
+
 ### Full control mode
 
 `Start Carter.bat` is **read-only**: Carter can look at anything and remember
@@ -263,8 +295,8 @@ All optional. Set with `setx NAME "value"` and open a new terminal.
 | Variable | What it does | Default |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Carter's brain (your Claude API key) | uses Claude Code login if unset |
-| `CARTER_MODEL` | Claude model | `claude-opus-5` |
-| `CARTER_EFFORT` | `low` / `medium` / `high` thinking | `high` |
+| `CARTER_MODEL` | Claude model (`sonnet` fast, `opus` deepest) | `sonnet` |
+| `CARTER_EFFORT` | `low` / `medium` / `high` thinking | `low` |
 | `ELEVENLABS_API_KEY` | Premium voice and transcription | browser voice |
 | `CARTER_VOICE_ID` | ElevenLabs voice id | `CwhRBWXzGAHq8TQ4Fs17` (Roger) |
 | `CARTER_HOME` | Where memory and WhatsApp login are kept | `~\.carter` |

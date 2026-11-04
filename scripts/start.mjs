@@ -12,7 +12,10 @@
 
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { cpSync, existsSync, mkdirSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { randomBytes } from 'node:crypto'
+import qrTerminal from 'qrcode-terminal'
+import QRCode from 'qrcode'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -119,8 +122,84 @@ if (port) {
 
 vendorWasm()
 
+const carterHome = process.env.CARTER_HOME || join(homedir(), '.carter')
+
+/**
+ * Phone mode (`--phone`): reach Carter from the founder's phone, anywhere.
+ *
+ * The interface is the Vercel site (CARTER_WEB_URL); the brain stays here. A
+ * Cloudflare quick tunnel gives this PC a temporary https address, and every
+ * request through it must carry the secret access key, kept in
+ * ~/.carter/access-key. The phone link (printed and shown as a QR code) holds
+ * both; the phone remembers them after the first visit.
+ */
+const phone = process.argv.includes('--phone')
+let accessKey = ''
+if (phone) {
+  const keyFile = join(carterHome, 'access-key')
+  accessKey =
+    process.env.CARTER_ACCESS_KEY ||
+    (existsSync(keyFile) ? readFileSync(keyFile, 'utf8').trim() : '')
+  if (!accessKey) {
+    accessKey = randomBytes(24).toString('base64url')
+    mkdirSync(carterHome, { recursive: true })
+    writeFileSync(keyFile, accessKey)
+  }
+  bridgeEnv.CARTER_ACCESS_KEY = accessKey
+}
+
 console.log('\nC.A.R.T.E.R. starting — the brain and the face.\n')
 run('bridge', 'node', ['bridge/server.mjs'], '36', bridgeEnv)
+
+if (phone) {
+  const web = (process.env.CARTER_WEB_URL || '').replace(/\/+$/, '')
+  if (!web) {
+    console.log(
+      '\n  Phone mode needs your Vercel address first:\n' +
+        '    setx CARTER_WEB_URL "https://your-carter.vercel.app"\n' +
+        '  then open a new PowerShell window and start again.\n',
+    )
+  } else {
+    const tunnel = spawn(
+      'cloudflared',
+      ['tunnel', '--url', `http://localhost:8788`, '--no-autoupdate'],
+      { shell: false },
+    )
+    children.push(tunnel)
+    let shown = false
+    const watch = async (d) => {
+      const m = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(d.toString())
+      if (!m || shown) return
+      shown = true
+      const bridge = m[0].replace(/^https/, 'wss')
+      const link = `${web}/#bridge=${encodeURIComponent(bridge)}&key=${encodeURIComponent(accessKey)}`
+      const png = join(carterHome, 'phone-link.png')
+      try {
+        await QRCode.toFile(png, link, { width: 520, margin: 2 })
+      } catch {
+        /* the terminal code is enough */
+      }
+      console.log('\n  ================= CARTER ON YOUR PHONE =================')
+      console.log('  Scan this with your phone camera (or open the image below):\n')
+      qrTerminal.generate(link, { small: true })
+      console.log(`\n  QR image: ${png}`)
+      console.log(`  Link (private — it contains your key):\n  ${link}`)
+      console.log('  The tunnel address changes each time Carter starts: scan again then.')
+      console.log('  ===========================================================\n')
+    }
+    tunnel.stdout.on('data', watch)
+    tunnel.stderr.on('data', watch)
+    tunnel.on('error', (err) => {
+      console.log(
+        err.code === 'ENOENT'
+          ? '\n  cloudflared is not installed. Install it once (PowerShell):\n' +
+              '    winget install --id Cloudflare.cloudflared\n' +
+              '  then open a new PowerShell window and start again.\n'
+          : `\n  The phone tunnel failed: ${err.message}\n`,
+      )
+    })
+  }
+}
 // npm is a shell script on most systems; call the vite binary directly so we do
 // not need shell:true (which would break the argument handling above).
 run('face', process.execPath, ['node_modules/vite/bin/vite.js'], '35', {})
@@ -131,7 +210,6 @@ run('reminders', 'node', ['bridge/reminders.mjs'], '32', {}, false)
 // Carter on WhatsApp starts alongside, once it has been linked to a phone with
 // `npm run whatsapp`. Until then it is skipped, because linking needs the QR
 // code on screen and that belongs in its own window.
-const carterHome = process.env.CARTER_HOME || join(homedir(), '.carter')
 if (existsSync(join(carterHome, 'whatsapp-auth', 'creds.json'))) {
   run('whatsapp', 'node', ['bridge/whatsapp.mjs'], '33', bridgeEnv, false)
 } else {

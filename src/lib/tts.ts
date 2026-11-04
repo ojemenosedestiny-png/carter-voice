@@ -5,6 +5,7 @@ import {
   TTS_ENGINE,
   KOKORO_VOICE,
   BRIDGE_HTTP_URL,
+  withKey,
 } from '../config'
 import * as kokoro from './kokoro'
 import { caps } from './capabilities'
@@ -752,7 +753,7 @@ async function fetchCloudAudio(text: string): Promise<string | null> {
   text = asCarter(text)
   if (BACKEND === 'bridge') {
     try {
-      const res = await fetch(`${BRIDGE_HTTP_URL}/tts`, {
+      const res = await fetch(withKey(`${BRIDGE_HTTP_URL}/tts`), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ text }),

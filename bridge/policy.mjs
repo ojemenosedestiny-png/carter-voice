@@ -23,7 +23,9 @@ export const ALLOW_WRITES = process.env.JARVIS_ALLOW_WRITES === '1'
  * The orchestrator model. Override with JARVIS_MODEL to trade quality for pace
  * — claude-sonnet-5 is noticeably snappier on camera if Opus feels slow.
  */
-export const MODEL = process.env.JARVIS_MODEL ?? 'claude-opus-5'
+// Carter defaults to speed: Sonnet answers a spoken question in a fraction of
+// Opus's time. Set CARTER_MODEL="opus" (and CARTER_EFFORT="high") for depth.
+export const MODEL = process.env.JARVIS_MODEL || 'sonnet'
 
 /**
  * How hard the model thinks before answering.
@@ -40,7 +42,7 @@ export const MODEL = process.env.JARVIS_MODEL ?? 'claude-opus-5'
  * matters more than pace; drop back to 'low' when filming and every second of
  * dead air shows.
  */
-export const EFFORT = process.env.JARVIS_EFFORT ?? 'high'
+export const EFFORT = process.env.JARVIS_EFFORT || 'low'
 
 /**
  * Both spellings of every renamed built-in are listed on purpose. The SDK

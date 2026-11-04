@@ -20,7 +20,9 @@
     "start:writes": "node scripts/start.mjs --writes",
     "whatsapp": "node bridge/whatsapp.mjs",
     "whatsapp:writes": "node bridge/whatsapp.mjs --writes",
-    "prebuild": "node scripts/vendor-wasm.mjs"
+    "prebuild": "node scripts/vendor-wasm.mjs",
+    "start:phone": "node scripts/start.mjs --phone",
+    "start:phone-writes": "node scripts/start.mjs --phone --writes"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.220",

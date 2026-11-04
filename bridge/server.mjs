@@ -17,6 +17,7 @@
 
 import './env.mjs'
 import { WebSocketServer } from 'ws'
+import { timingSafeEqual } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 import { displayServer } from './panels.mjs'
 import { uiServer } from './ui.mjs'
@@ -515,7 +516,49 @@ function corsFor(req) {
 // One HTTP server for both the speech proxy and the WebSocket upgrade.
 const http = await import('node:http')
 
+// ---------------------------------------------------------------------------
+// Remote access (the founder's phone, through a tunnel).
+//
+// Anything that does not come straight from this computer — a request through
+// the Cloudflare tunnel, or from another device on the network — must carry
+// the secret CARTER_ACCESS_KEY, as ?key=… or an x-carter-key header. Without a
+// key configured, remote access is simply refused. The interface on this PC
+// itself needs no key.
+// ---------------------------------------------------------------------------
+const ACCESS_KEY = process.env.CARTER_ACCESS_KEY || ''
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1'])
+
+function fromThisComputer(req) {
+  if (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for']) return false
+  return LOOPBACK.has(req.socket?.remoteAddress ?? '')
+}
+
+/** Strip the key out of the URL (so routing is unchanged) and check it. */
+function authorised(req) {
+  let given = String(req.headers['x-carter-key'] ?? '')
+  try {
+    const u = new URL(req.url ?? '/', 'http://carter.local')
+    if (u.searchParams.has('key')) {
+      given = u.searchParams.get('key') ?? ''
+      u.searchParams.delete('key')
+      req.url = u.pathname + u.search
+    }
+  } catch {
+    /* leave the url alone */
+  }
+  if (fromThisComputer(req)) return true
+  if (!ACCESS_KEY || !given) return false
+  const a = Buffer.from(given)
+  const b = Buffer.from(ACCESS_KEY)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+
 const handleRequest = async (req, res) => {
+  if (!authorised(req)) {
+    console.warn(`[carter] refused a remote request without the right access key`)
+    res.writeHead(401, { vary: 'origin' })
+    return res.end('unauthorised')
+  }
   const origin = req.headers.origin
   if (origin && !originAllowed(origin)) {
     console.warn(`[carter] refused http request from origin ${origin}`)
@@ -867,6 +910,10 @@ const wss = new WebSocketServer({
   // the likeliest cause is a dev server on an unexpected port, and a silent
   // 403 would look like the bridge simply isn't running.
   verifyClient: ({ origin, req }, done) => {
+    if (!authorised(req)) {
+      console.warn('[carter] rejected a remote websocket without the right access key')
+      return done(false, 401, 'Unauthorised')
+    }
     const path = (req.url ?? '/').split('?')[0]
     if (path !== '/' && path !== '/ws') {
       console.warn(`[carter] rejected websocket on path ${path}`)
