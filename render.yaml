@@ -21,8 +21,10 @@ services:
         value: /var/data
       - key: CARTER_ACCESS_KEY
         generateValue: true   # the secret in your phone link
+      - key: CLAUDE_CODE_OAUTH_TOKEN
+        sync: false           # from `claude setup-token` (your Claude subscription)
       - key: ANTHROPIC_API_KEY
-        sync: false           # you paste it in during setup
+        sync: false           # or a pay-as-you-go API key instead
       - key: ELEVENLABS_API_KEY
         sync: false
       - key: TWILIO_ACCOUNT_SID

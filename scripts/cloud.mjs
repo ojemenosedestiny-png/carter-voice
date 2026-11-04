@@ -28,8 +28,15 @@ if (!env.CARTER_ACCESS_KEY || env.CARTER_ACCESS_KEY.length < 16) {
   )
   process.exit(1)
 }
-if (!env.ANTHROPIC_API_KEY) {
-  console.warn('[carter:cloud] ANTHROPIC_API_KEY is not set — Carter will not be able to think.')
+// Carter's brain signs in with either a Claude API key (pay as you go) or a
+// Claude Code login token from `claude setup-token` (uses your Claude
+// subscription — no API credit needed).
+if (!env.ANTHROPIC_API_KEY && !env.CLAUDE_CODE_OAUTH_TOKEN) {
+  console.warn(
+    '[carter:cloud] Neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY is set — ' +
+      'Carter will not be able to think. Run `claude setup-token` on your laptop and ' +
+      'add the token as CLAUDE_CODE_OAUTH_TOKEN.',
+  )
 }
 if (env.CARTER_HOME) mkdirSync(env.CARTER_HOME, { recursive: true })
 

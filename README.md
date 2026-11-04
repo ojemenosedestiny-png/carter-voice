@@ -139,12 +139,17 @@ when your laptop is off. (Carter in the cloud can't open files or programs on
 your laptop.) Cost: Render **Starter** (~$7/month) + 1 GB disk (~$0.25/month) —
 the free plan sleeps after 15 minutes and forgets everything on restart.
 
-1. Create a **Claude API key** at console.anthropic.com → API Keys (add a few
-   dollars of credit under Billing).
+1. Give Carter a way to sign in to Claude — **either**:
+   - **Your Claude subscription (no extra cost):** on your laptop run
+     `claude setup-token`, log in when the browser opens, and copy the token it
+     prints (starts with `sk-ant-oat`). It goes in **CLAUDE_CODE_OAUTH_TOKEN**.
+   - **or a Claude API key** (pay as you go) from console.anthropic.com → API
+     Keys. It goes in **ANTHROPIC_API_KEY**.
 2. Sign in at **render.com** with GitHub → **New → Blueprint** → choose
    **carter-voice** → **Apply**. Render reads `render.yaml`: a Starter web
    service in Frankfurt with a 1 GB disk.
-3. When it asks for environment values, paste your **ANTHROPIC_API_KEY**, and
+3. When it asks for environment values, paste your **CLAUDE_CODE_OAUTH_TOKEN**
+   (or ANTHROPIC_API_KEY), and
    optionally ELEVENLABS_API_KEY, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
    TWILIO_FROM and CARTER_PHONE (leave any you don't use empty).
 4. Wait for the first deploy (~3 minutes) until it says **Live**.
